@@ -27,6 +27,7 @@ int main(int argc, char* argv[]){
 		switch (optVal) {
 			case 'r':
 				printf("%s\n", ("Found a rdonly option."));
+				break;
 			default:
 				printf("%s\n", "No match found.");
 		}
