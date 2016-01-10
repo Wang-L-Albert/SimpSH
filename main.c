@@ -12,14 +12,21 @@
 int main(int argc, char* argv[]){
 	//set up the options
 	int fid;
+	/*
+	int fid[]
+	*/
 	struct option optionlist[] = {
+		//*name, hasarg, *flag, val
 		{"rdonly", 1, 0, 'r'},
-		{0       , 0, 0,  0 }
+		{"wronly", 1, 0, 'w'},
+		{"verbose", 0, 0,'v'},
+		{0       , 0, 0,  0 } 
+		//last element indicated by 0's
 	}; //********expand this to be variable later
 
 	int optVal; //will store the val returned by getopt_long
 	int option_ind = 0;
-	while (1){ //*********8check if this is the correct limit
+	while (1){ //*********check if this is the correct limit
 		optVal = getopt_long(argc, argv, "", optionlist, &option_ind);
 		if (optVal == -1){
 			printf("%s\n", ("break on -1"));
@@ -30,8 +37,22 @@ int main(int argc, char* argv[]){
 			case 'r':
 				//we open the file as pointed to by optarg in read only mode
 				fid = open(optarg, O_RDONLY);
+				//increment fid?
 				printf("%s\n", ("Opened in read only."));
+				printf("optarg: %s\n", optarg);
 				printf("%d\n", (fid));
+				break;
+			case 'w':
+				fid = open(optarg, O_WRONLY);
+				printf("%s\n",("Opened in write only."));
+				printf("%d\n", (fid));
+				break;
+			case 'v':
+				//option ind includes --verbose
+				for (int i = optind; i < argc; i++)
+				{
+					printf("%s ", argv[i]);
+				}
 				break;
 			default:
 				printf("%s\n", "No match found.");
