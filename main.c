@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <getopt.h>
@@ -10,17 +11,19 @@
 
 
 int main(int argc, char* argv[]){
-	//set up the options
-	int fid;
-	/*
-	int fid[]
-	*/
+	//set up dynamic arrays
+	//there will never be more than argc child processes, so this is more than enough.
+	pid_t* pidList = (pid_t*) malloc(argc*sizeof(pid_t));
+	int* fidList = (int*) malloc(argc*sizeof(int));
+	int numPid = 0;
+	int numFid = 0;
+
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
-		{"rdonly", 1, 0, 'r'},
-		{"wronly", 1, 0, 'w'},
-		{"verbose", 0, 0,'v'},
-		{0       , 0, 0,  0 } 
+		{"rdonly",  1, 0, 'r'},
+		{"wronly",  1, 0, 'w'},
+		{"verbose", 0, 0, 'v'},
+		{0       ,  0, 0,  0 } 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
 
@@ -36,16 +39,16 @@ int main(int argc, char* argv[]){
 		switch (optVal) {
 			case 'r':
 				//we open the file as pointed to by optarg in read only mode
-				fid = open(optarg, O_RDONLY);
+				fidList[numPid++] = open(optarg, O_RDONLY);
 				//increment fid?
 				printf("%s\n", ("Opened in read only."));
 				printf("optarg: %s\n", optarg);
-				printf("%d\n", (fid));
+				printf("%d\n", (fidList[numPid-1]));
 				break;
 			case 'w':
-				fid = open(optarg, O_WRONLY);
+				fidList[numPid++] = open(optarg, O_WRONLY);
 				printf("%s\n",("Opened in write only."));
-				printf("%d\n", (fid));
+				printf("%d\n", (fidList[numPid-1]));
 				break;
 			case 'v':
 				//option ind includes --verbose
@@ -58,5 +61,9 @@ int main(int argc, char* argv[]){
 				printf("%s\n", "No match found.");
 		}
 	}
-	close (fid);
+	for (int i = 0; i < numFid; i++){
+		close (fidList[i]);
+	}	
+	free(pidList);
+	free(fidList);
 }
