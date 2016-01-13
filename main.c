@@ -42,14 +42,14 @@ int main(int argc, char* argv[]){
 		switch (optVal) {
 			case 'r'://rdonly
 				//we open the file as pointed to by optarg in read only mode
-				fidList[numPid++] = open(optarg, O_RDONLY);
+				fidList[numFid++] = open(optarg, O_RDONLY);
 				//increment fid?
 				printf("%s\n", ("Opened in read only."));
 				printf("optarg: %s\n", optarg);
 				printf("%d\n", (fidList[numFid-1]));
 				break;
 			case 'w'://wronly
-				fidList[numPid++] = open(optarg, O_WRONLY);
+				fidList[numFid++] = open(optarg, O_WRONLY);
 				printf("%s\n",("Opened in write only."));
 				printf("%d\n", (fidList[numFid-1]));
 				break;
