@@ -15,12 +15,13 @@ check:
 	touch hi.txt
 	echo "hi albert" >> hi.txt
 	touch hai.txt
-	echo "hai albert" >> hai.txt
+	echo "bye albert" >> bye.txt
 	touch hoi.txt
-	echo "hoi albert" >> hoi.txt	
+	echo "error bert" >> errbert.txt	
 	./$(EXECUTABLE_NAME) --rdonly hi.txt
-	./$(EXECUTABLE_NAME) --wronly hi.txt
-	./$(EXECUTABLE_NAME) --verbose --rdonly hoi.txt --wronly hai.txt
+	./$(EXECUTABLE_NAME) --wronly bye.txt
+	./$(EXECUTABLE_NAME) --verbose --rdonly hi.txt --wronly bye.txt
+	./$(EXECUTABLE_NAME) --rdonly hi.txt --wronly hai.txt --wronly hoi.txt --command 0 1 2 tr a-z A-Z
 
 dist:
 
