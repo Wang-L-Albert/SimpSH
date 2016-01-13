@@ -1,0 +1,20 @@
+CC = gcc
+CFLAGS = -g -Wall -Wextra -Werror -std=gnu11
+EXECUTABLE_NAME = simpsh
+
+default: main.c
+	$(CC) $(CFLAGS) $^ -o $(EXECUTABLE_NAME)
+    
+clean:
+	rm -f $(EXECUTABLE_NAME) *.o *.tar.gz
+	rm hi.txt
+	rm hai.txt
+	rm hoi.txt
+
+check:
+	touch hi.txt
+	echo "hi albert" >> hi.txt
+	touch hai.txt
+	echo "hai albert" >> hi.txt
+	touch hoi.txt
+	echo "hoi albert" >> hi.txt	
