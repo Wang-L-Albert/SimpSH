@@ -61,7 +61,7 @@ int main(int argc, char* argv[]){
 				}
 				break;
 			case 'c':{//command
-				pid_t childPid= fork();
+				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
 					//re-reroute I/O
 					//at this point, optarg points to the next arg, optind next ind
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]){
 					//now three times from option_ind+1 to get the I/O re-routes
 					int argParse = option_ind+1;
 					for (int i = 0; i < 3; i++){
-						int newIO = (int) (argv[argParse++] - '0');
+						int newIO = (int) (argv[argParse++] - '0');////////cast from pointer to int of diff size
 						dup2(newIO, i-1);
 					}
 					//now that IO is rewritten, get the string
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
 					int argSize = optEnd-argParse;
 
 					char** newArgs;
-					*newArgs = (char*) malloc((argSize+1)*sizeof(char *));
+					*newArgs = (char*) malloc((argSize+1)*sizeof(char *));/////may be used uninit in this func
 					int newArgIndex;
 					for (newArgIndex = 0; newArgIndex < argSize; newArgIndex++){
 						newArgs[newArgIndex] = argv[argParse++];
@@ -96,6 +96,14 @@ int main(int argc, char* argv[]){
 					//carry out new execution
 					execvp(newCmd, newArgs);
 				} 
+				int returnStatus
+				waitpid(childPid, &returnStatus, 0);
+				if (returnStatus == 0){
+					printf("%s\n", "Normal termination.");
+				}
+				if (returnStatus == 1) {
+					printf("%s\n", "Terminated with an error!");
+				}
 			}	break;
 			
 			default:
