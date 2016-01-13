@@ -7,9 +7,6 @@
 #include <fcntl.h>
 //int optid = 1; //tracks which read in argument we'll read next
 //char* optarg; //will store the arguments for the option as we move it in.
-
-
-
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
@@ -32,7 +29,7 @@ int main(int argc, char* argv[]){
 	int option_ind = 0;
 	while (1){ 
 		optVal = getopt_long(argc, argv, "", optionlist, &option_ind); //option_ind is the option's index in argv[].
-		//global var optarg now points to option_ind+1, and optind to the index of the next index (first non-option 
+		//global var optarg now points to potion_ind+1, and optind to the index of the next index (first non-option 
 		//in argv[] if no more options.
 		if (optVal == -1){
 			printf("%s\n", ("break on -1"));
@@ -71,24 +68,29 @@ int main(int argc, char* argv[]){
 					int tempOptInd = optind;
 					int tempOpt_Ind = 0;
 					getopt_long(argc, argv, "", optionlist, &tempOpt_Ind);
-					if (optind < tempOptInd){//would only be true if no more options and it went back to first non-opt arg
-						optEnd = arg;
+					if (optind == tempOptInd){//would only be true if no more options and it went back to first non-opt arg
+						optEnd = argc;
 					} else {
 						optEnd = tempOpt_Ind;
+						optind = tempOptInd;//undo the search, we only want to verify there was another one. 
 					}
 					//now three times from option_ind+1 to get the I/O re-routes
-					int argParse = option_ind+1;
+					int argParse = optind-1;
+					printf("option_ind: %d\n", option_ind);
+					printf("OptEnd: %d\n", optEnd);
+					printf("Optind: %d\n", optind);
+					printf("argParse: %d\n", argParse);
 					for (int i = 0; i < 3; i++){
-						int newIO = (int) (argv[argParse++] - '0');////////cast from pointer to int of diff size
+						int newIO = (intptr_t) (argv[argParse++] - '0');////////cast from pointer to int of diff size
 						dup2(newIO, i-1);
 					}
 					//now that IO is rewritten, get the string
 					//argParse should now be 4, the position of the char* for our command
 					char* newCmd = argv[argParse++];
+					printf("passed in command: %s\n", newCmd);
 					//now store the arguments for CMD in a new array.
 					int argSize = optEnd-argParse;
-
-					char** newArgs;
+					char** newArgs = NULL;
 					*newArgs = (char*) malloc((argSize+1)*sizeof(char *));/////may be used uninit in this func
 					int newArgIndex;
 					for (newArgIndex = 0; newArgIndex < argSize; newArgIndex++){
