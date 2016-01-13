@@ -67,15 +67,18 @@ int main(int argc, char* argv[]){
 					//at this point, optarg points to the next arg, optind next ind
 					//need a variable for end of our stream of arguments
 					int optEnd = 0;
+
 					//need to check if any more options or not.
 					int tempOptInd = optind;
 					int tempOpt_Ind = 0;
 					getopt_long(argc, argv, "", optionlist, &tempOpt_Ind);
 					if (optind < tempOptInd){//would only be true if no more options and it went back to first non-opt arg
-						optEnd = arg;
+						optEnd = argc;
 					} else {
 						optEnd = tempOpt_Ind;
 					}
+					printf("optEnd miuw:%d/n", optEnd);
+					printf("optind mraoww:%d/n", optind);
 					//now three times from option_ind+1 to get the I/O re-routes
 					int argParse = option_ind+1;
 					for (int i = 0; i < 3; i++){
