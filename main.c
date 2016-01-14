@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
 					getopt_long(argc, argv, "", optionlist, &tempOpt_Ind);
 					if (optind == tempOptInd){//would only be true if no more options and it went back to first non-opt arg
 						optEnd = argc;
-					} else {
+					} else { //are more --commands
 						optEnd = tempOpt_Ind;
 						optind = tempOptInd;//undo the search, we only want to verify there was another one. 
 					}
@@ -87,19 +87,19 @@ int main(int argc, char* argv[]){
 					// dup2(4,1);
 					
 					for (int i = 0; i < 3; i++){
-						printf("INSDE THE FOR LOOP 				argParse: %d\n", argParse);
-						printf("INSDE THE FOR LOOP 				filedescrip: %s\n", argv[argParse]);
+						// printf("INSDE THE FOR LOOP 				argParse: %d\n", argParse);
+						// printf("INSDE THE FOR LOOP 				filedescrip: %s\n", argv[argParse]);
 						int newIO = strtol(argv[argParse++], NULL, 10);
-						printf("newIO: %d\n", newIO );
+						// printf("newIO: %d\n", newIO );
 						//int newIO = (int) (argv[argParse++] - '0');////////cast from pointer to int of diff size
-						printf("FUCKKKKKKKKKKKKKKKKKKKKK%d\n", fidList[2]);
-						printf("fidlist shiiit real newIO: %d\n", fidList[newIO] );
+						// printf("FUCKKKKKKKKKKKKKKKKKKKKK%d\n", fidList[2]);
+						// printf("fidlist shiiit real newIO: %d\n", fidList[newIO] );
 						dup2(fidList[newIO], i);						
 					}
 					//now that IO is rewritten, get the string
 					//argParse should now be 4, the position of the char* for our command
 					char* newCmd = argv[argParse++];
-					printf("passed in command: %s\n", newCmd);
+					// printf("passed in command: %s\n", newCmd);
 
 					//now store the arguments for CMD in a new array.
 					int argSize = optEnd-argParse+1;
@@ -110,15 +110,15 @@ int main(int argc, char* argv[]){
 					//printf("FUCK 3\n" );
 					int newArgIndex;
 					//printf("FUCK 4\n" );
-					printf("argSize:     %d\n", argSize);
+					// printf("argSize:     %d\n", argSize);
 					newArgs[0]=newCmd;
 					for (newArgIndex = 1; newArgIndex < argSize; newArgIndex++){
 						newArgs[newArgIndex] = argv[argParse++];
-						printf("newArgs[newArgIndex] :        %s\n", newArgs[newArgIndex]);
+						// printf("newArgs[newArgIndex] :        %s\n", newArgs[newArgIndex]);
 					}
-					printf("newCmd:     %s\n", newCmd);
+					// printf("newCmd:     %s\n", newCmd);
 					//place nullptr at the end of the array.
-					printf("newArgIndex: %d\n", newArgIndex);
+					// printf("newArgIndex: %d\n", newArgIndex);
 					newArgs[newArgIndex] = NULL;
 					//carry out new execution
 					execvp(newCmd, newArgs);
