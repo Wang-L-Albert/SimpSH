@@ -25,11 +25,13 @@ check: default
 	./$(EXECUTABLE_NAME) --verbose --rdonly hi.txt --wronly bye.txt
 	#./$(EXECUTABLE_NAME) --rdonly hi.txt --wronly bye.txt --wronly errbert.txt --command 0 1 2 tr a-z A-Z
 	#./$(EXECUTABLE_NAME) --rdonly sortbert.txt --wronly bye.txt --wronly errbert.txt --command 0 1 2 sort 
+	#./$(EXECUTABLE_NAME) --rdonly sortbert.txt --wronly bye.txt --wronly errbert.txt --command 0 1 2 tr o j --command 0 1 2 tr a-z A-Z
 	./$(EXECUTABLE_NAME) --rdonly hi.txt --wronly bye.txt --rdonly sortbert.txt --wronly finbert.txt --wronly errbert.txt --command 0 1 4 tr a-z A-Z --command 2 3 4 sort 
 
 dist: check
-	mkrdir lab1-laurenyeung
-	tar -C /lab1-laurenyeung/ -cvf lab1-laurenyeung.tar.gz *.c *Makefile README.*
+	mkdir lab1-laurenyeung
+	mv *.sh *.exe *.h *.c Makefile README lab1-laurenyeung
+	# tar -C /lab1-laurenyeung/ -cvf lab1-laurenyeung.tar.gz *.c *Makefile README.*
 
 
 	

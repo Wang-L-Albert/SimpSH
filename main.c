@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <getopt.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,7 +15,7 @@ int main(int argc, char* argv[]){
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numPid = 0;
 	int numFid = 0;
-
+	printf("argv[19] %s\n", argv[19]);
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
 		{"rdonly",  1, 0, 'r'},
@@ -64,42 +65,60 @@ int main(int argc, char* argv[]){
 					//re-reroute I/O
 					//at this point, optarg points to the next arg, optind next ind
 					//need a variable for end of our stream of arguments
-					int optEnd = 0;
+					int optEnd = optind;
 					//need to check if any more options or not.
-					int tempOptInd = optind;
-					int tempOpt_Ind = 0;
-					getopt_long(argc, argv, "", optionlist, &tempOpt_Ind);
-					if (optind == tempOptInd){//would only be true if no more options and it went back to first non-opt arg
-						optEnd = argc;
-					} else { //are more --commands
-						optEnd = tempOpt_Ind;
-						optind = tempOptInd;//undo the search, we only want to verify there was another one. 
+
+					//printf("optind inside command: %d\n", optind);
+					const char dashes[3] = "--";
+					for (int a = optind; a < argc; a++){
+						char * nextOpt = strstr(argv[a], dashes);
+						if(nextOpt != NULL){ //THERE IS ANOTHER OPTION
+							optEnd = a;
+							break;
+						} else if (a == (argc - 1)){
+							optEnd = argc;
+						}
 					}
+					/* int tempOptInd = optind;
+					int tempOpt_Ind = 0;
+					printf("optind before getopt: %d\n", optind);
+					getopt_long(argc, argv, "", optionlist, &tempOpt_Ind);
+					printf("optind after getopt: %d\n", optind);
+					if (optind <= tempOptInd){//would only be true if no more options and it went back to first non-opt arg
+						printf("argc:   %d\n",argc);
+						optEnd = argc;
+
+					} else { //are more --commands
+				
+						optEnd = optind-2;
+						optind = optEnd;//undo the search, we only want to verify there was another one. 
+					printf("optind inside else:  %d\n", optind);
+					}
+					*/
 					//now three times from option_ind+1 to get the I/O re-routes
 					int argParse = optind-1;
-					printf("option_ind: %d\n", option_ind);
-					printf("OptEnd: %d\n", optEnd);
-					printf("Optind: %d\n", optind);
-					printf("argParse: %d\n", argParse);
+					//printf("option_ind: %d\n", option_ind);
+					//printf("OptEnd: %d\n", optEnd);
+					//printf("tempOptInd: %d\n", tempOptInd);
+					//printf("argParse: %d\n", argParse);
 					// dup2(3,0);
 					// dup2(5,2);
 					// printf("NOOOOOOOOOOOOOOOO 1\n" );
 					// dup2(4,1);
 					
 					for (int i = 0; i < 3; i++){
-						// printf("INSDE THE FOR LOOP 				argParse: %d\n", argParse);
-						// printf("INSDE THE FOR LOOP 				filedescrip: %s\n", argv[argParse]);
+						//printf("inside for loop: argParse: %d\n", argParse);
+						//printf("filedescrip: %s\n", argv[argParse]);
 						int newIO = strtol(argv[argParse++], NULL, 10);
-						// printf("newIO: %d\n", newIO );
-						//int newIO = (int) (argv[argParse++] - '0');////////cast from pointer to int of diff size
-						// printf("FUCKKKKKKKKKKKKKKKKKKKKK%d\n", fidList[2]);
-						// printf("fidlist shiiit real newIO: %d\n", fidList[newIO] );
+						//printf("newIO: %d\n", newIO );
+						//printf("FUCKKKKKKKKKKKKKKKKKKKKK%d\n", fidList[2]);
+						//printf("fidlist shiiit real newIO: %d\n", fidList[newIO] );
 						dup2(fidList[newIO], i);						
 					}
 					//now that IO is rewritten, get the string
 					//argParse should now be 4, the position of the char* for our command
 					char* newCmd = argv[argParse++];
-					// printf("passed in command: %s\n", newCmd);
+					//printf("passed in command: %s\n", newCmd);
 
 					//now store the arguments for CMD in a new array.
 					int argSize = optEnd-argParse+1;
@@ -110,19 +129,21 @@ int main(int argc, char* argv[]){
 					//printf("FUCK 3\n" );
 					int newArgIndex;
 					//printf("FUCK 4\n" );
-					// printf("argSize:     %d\n", argSize);
+					//printf("argSize:     %d\n", argSize);
 					newArgs[0]=newCmd;
 					for (newArgIndex = 1; newArgIndex < argSize; newArgIndex++){
 						newArgs[newArgIndex] = argv[argParse++];
-						// printf("newArgs[newArgIndex] :        %s\n", newArgs[newArgIndex]);
+						//printf("newArgs[newArgIndex] :        %s\n", newArgs[newArgIndex]);
 					}
-					// printf("newCmd:     %s\n", newCmd);
+					//printf("newCmd:     %s\n", newCmd);
 					//place nullptr at the end of the array.
-					// printf("newArgIndex: %d\n", newArgIndex);
+					//printf("newArgIndex: %d\n", newArgIndex);
 					newArgs[newArgIndex] = NULL;
 					//carry out new execution
 					execvp(newCmd, newArgs);
 				} 
+				int status;
+				waitpid(childPid, &status, 0);
 			}	break;
 			
 			default:
