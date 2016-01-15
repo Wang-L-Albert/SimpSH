@@ -4,7 +4,6 @@ EXECUTABLE_NAME = simpsh
 
 default: main.c
 	$(CC) $(CFLAGS) $^ -o $(EXECUTABLE_NAME)
-
     
 clean:
 	rm -f $(EXECUTABLE_NAME) *.o *.tar.gz
@@ -20,6 +19,7 @@ check: default
 	echo "final albert" >>finbert.txt
 	echo "error bert" >> errbert.txt	
 	echo "z\noooo\na\nwhatthe" >> sortbert.txt
+	chmod +x test.sh
 	./test.sh
 	
 dist: check

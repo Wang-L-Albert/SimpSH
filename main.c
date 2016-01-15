@@ -15,11 +15,12 @@ int main(int argc, char* argv[]){
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numPid = 0;
 	int numFid = 0;
+	static int verbose_flag = 0;
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
 		{"rdonly",  1, 0, 'r'},
 		{"wronly",  1, 0, 'w'},
-		{"verbose", 0, 0, 'v'},
+		{"verbose", 0, &verbose_flag, 1},
 		{"command", 1, 0, 'c'},
 		{0       ,  0, 0,  0 } 
 		//last element indicated by 0's
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]){
 		switch (optVal) {
 			case 'r'://rdonly
 				//we open the file as pointed to by optarg in read only mode
+				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 				fidList[numFid++] = open(optarg, O_RDONLY);
 				//increment fid?
 				printf("%s\n", ("Opened in read only."));
@@ -46,18 +48,19 @@ int main(int argc, char* argv[]){
 				printf("%d\n", (fidList[numFid-1]));
 				break;
 			case 'w'://wronly
+				if(verbose_flag) printf("--%s %s\n",optionlist[option_ind].name, optarg);
 				fidList[numFid++] = open(optarg, O_WRONLY);
 				printf("%s\n",("Opened in write only."));
 				printf("optarg: %s\n", optarg);
 				printf("%d\n", (fidList[numFid-1]));
 				break;
-			case 'v'://verbose
-				//option ind includes --verbose
-				for (int i = optind; i < argc; i++)
-				{
-					printf("%s ", argv[i]);
-				}
-				break;
+			// case 'v'://verbose
+			// 	//option ind includes --verbose
+			// 	for (int i = optind; i < argc; i++)
+			// 	{
+			// 		printf("%s ", argv[i]);
+			// 	}
+			// 	break;
 			case 'c':{//command
 				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
@@ -77,6 +80,16 @@ int main(int argc, char* argv[]){
 						} else if (a == (argc - 1)){
 							optEnd = argc;
 						}
+					}
+					if(verbose_flag)
+						{
+							printf("--%s ", optionlist[option_ind].name);
+							printf("%s ", optarg);
+							for(int i = optind; i < optEnd; i++)
+							{
+								printf("%s ", argv[i]);
+							}
+							printf("\n");
 					}
 					/* int tempOptInd = optind;
 					int tempOpt_Ind = 0;
