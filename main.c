@@ -6,8 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-//int optid = 1; //tracks which read in argument we'll read next
-//char* optarg; //will store the arguments for the option as we move it in.
+int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
@@ -35,6 +34,7 @@ int main(int argc, char* argv[]){
 		//in argv[] if no more options.
 		if (optVal == '?'){//occurs when we find an option without the appropriate argument
 			fprintf(stderr, "%s is missing an argument", optionlist[option_ind].name);
+			numErrors++;
 			continue;
 		}
 		if (optVal == -1){//no more options to parse
@@ -49,6 +49,7 @@ int main(int argc, char* argv[]){
 				fid = open(optarg, O_RDONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in read only mode failed. \n", optarg);
+					numErrors++;
 					continue;
 				}
 				fidList[numFid++] = fid;
@@ -62,6 +63,7 @@ int main(int argc, char* argv[]){
 				fid = open(optarg, O_WRONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
+					numErrors++;
 					continue;
 				}
 				fidList[numFid++] = fid;
@@ -171,6 +173,7 @@ int main(int argc, char* argv[]){
 					int failedExec = execvp(newCmd, newArgs);
 					if (failedExec == -1){
 						fprintf(stderr, "Executing command %s failed. \n", newCmd);
+						numErrors++;
 						exit(1);
 					}
 				} 
@@ -187,4 +190,5 @@ int main(int argc, char* argv[]){
 	}	
 	free(pidList);
 	free(fidList);
+	exit(numErrors);
 }
