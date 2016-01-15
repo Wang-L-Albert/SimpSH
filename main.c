@@ -34,7 +34,7 @@ int main(int argc, char* argv[]){
 		//global var optarg now points to potion_ind+1, and optind to the index of the next index (first non-option 
 		//in argv[] if no more options.
 		if (optVal == '?'){//occurs when we find an option without the appropriate argument
-			fprintf(stderr, "%s is missing an argument", optionlist[option_ind].name);
+			fprintf(stderr, "%s is missing an argument\n", optionlist[option_ind].name);
 			numErrors++;
 			continue;
 		}
