@@ -15,6 +15,7 @@ int main(int argc, char* argv[]){
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numPid = 0;
 	int numFid = 0;
+	int fid = 0;
 	static int verbose_flag = 0;
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
@@ -32,7 +33,11 @@ int main(int argc, char* argv[]){
 		optVal = getopt_long(argc, argv, "", optionlist, &option_ind); //option_ind is the option's index in argv[].
 		//global var optarg now points to potion_ind+1, and optind to the index of the next index (first non-option 
 		//in argv[] if no more options.
-		if (optVal == -1){
+		if (optVal == '?'){//occurs when we find an option without the appropriate argument
+			fprintf(stderr, "%s is missing an argument", optionlist[option_ind].name);
+			continue;
+		}
+		if (optVal == -1){//no more options to parse
 			printf("%s\n", ("break on -1"));
 			break;
 		}
@@ -41,7 +46,12 @@ int main(int argc, char* argv[]){
 			case 'r'://rdonly
 				//we open the file as pointed to by optarg in read only mode
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-				fidList[numFid++] = open(optarg, O_RDONLY);
+				fid = open(optarg, O_RDONLY);
+				if (fid == -1){ //there was an error opening a file
+					fprintf(stderr, "Opening file %s in read only mode failed. \n", optarg);
+					continue;
+				}
+				fidList[numFid++] = fid;
 				//increment fid?
 				printf("%s\n", ("Opened in read only."));
 				printf("optarg: %s\n", optarg);
@@ -49,7 +59,12 @@ int main(int argc, char* argv[]){
 				break;
 			case 'w'://wronly
 				if(verbose_flag) printf("--%s %s\n",optionlist[option_ind].name, optarg);
-				fidList[numFid++] = open(optarg, O_WRONLY);
+				fid = open(optarg, O_WRONLY);
+				if (fid == -1){ //there was an error opening a file
+					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
+					continue;
+				}
+				fidList[numFid++] = fid;
 				printf("%s\n",("Opened in write only."));
 				printf("optarg: %s\n", optarg);
 				printf("%d\n", (fidList[numFid-1]));
@@ -62,7 +77,8 @@ int main(int argc, char* argv[]){
 			// 	}
 			// 	break;
 			case 'c':{//command
-				pid_t childPid = fork();
+				//pid_t childPid =
+				fork();
 				if (childPid == 0){ //if it is a child
 					//re-reroute I/O
 					//at this point, optarg points to the next arg, optind next ind
@@ -152,10 +168,14 @@ int main(int argc, char* argv[]){
 					//printf("newArgIndex: %d\n", newArgIndex);
 					newArgs[newArgIndex] = NULL;
 					//carry out new execution
-					execvp(newCmd, newArgs);
+					int failedExec = execvp(newCmd, newArgs);
+					if (failedExec == -1){
+						fprintf(stderr, "Executing command %s failed. \n", newCmd);
+						exit(1);
+					}
 				} 
-				int status;
-				waitpid(childPid, &status, 0);
+				//int status;
+				//waitpid(childPid, &status, 0);
 			}	break;
 			
 			default:
