@@ -15,7 +15,6 @@ int main(int argc, char* argv[]){
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numPid = 0;
 	int numFid = 0;
-	printf("argv[19] %s\n", argv[19]);
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
 		{"rdonly",  1, 0, 'r'},
