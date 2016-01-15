@@ -150,7 +150,7 @@ int main(int argc, char* argv[]){
 					//now store the arguments for CMD in a new array.
 					int argSize = optEnd-argParse+1;
 					char** newArgs = NULL;
-					newArgs = (char*) malloc((argSize+1)*sizeof(char *));/////may be used uninit in this func
+					newArgs = (char**) malloc((argSize+1)*sizeof(char *));/////may be used uninit in this func
 					int newArgIndex;
 					//printf("argSize: %d\n", argSize);
 					newArgs[0]=newCmd;

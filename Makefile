@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Wextra -std=gnu11
+CFLAGS = -g -Wall -Wextra -Wno-unused -Werror -std=c99
 EXECUTABLE_NAME = simpsh
 
 default: main.c
