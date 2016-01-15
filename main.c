@@ -4,6 +4,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 int numErrors = 0;
