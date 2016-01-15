@@ -39,7 +39,6 @@ int main(int argc, char* argv[]){
 			continue;
 		}
 		if (optVal == -1){//no more options to parse
-			printf("%s\n", ("break on -1"));
 			break;
 		}
 		//use optVal for switch statements, option_ind for access
@@ -55,9 +54,9 @@ int main(int argc, char* argv[]){
 				}
 				fidList[numFid++] = fid;
 				//increment fid?
-				printf("%s\n", ("Opened in read only."));
-				printf("optarg: %s\n", optarg);
-				printf("%d\n", (fidList[numFid-1]));
+				//printf("%s\n", ("Opened in read only."));
+				//printf("optarg: %s\n", optarg);
+				//printf("%d\n", (fidList[numFid-1]));
 				break;
 			case 'w'://wronly
 				if(verbose_flag) printf("--%s %s\n",optionlist[option_ind].name, optarg);
@@ -68,9 +67,9 @@ int main(int argc, char* argv[]){
 					continue;
 				}
 				fidList[numFid++] = fid;
-				printf("%s\n",("Opened in write only."));
-				printf("optarg: %s\n", optarg);
-				printf("%d\n", (fidList[numFid-1]));
+				//printf("%s\n",("Opened in write only."));
+				//printf("optarg: %s\n", optarg);
+				//printf("%d\n", (fidList[numFid-1]));
 				break;
 			// case 'v'://verbose
 			// 	//option ind includes --verbose
@@ -80,8 +79,7 @@ int main(int argc, char* argv[]){
 			// 	}
 			// 	break;
 			case 'c':{//command
-				//pid_t childPid =
-				fork();
+				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
 					//re-reroute I/O
 					//at this point, optarg points to the next arg, optind next ind
@@ -142,25 +140,19 @@ int main(int argc, char* argv[]){
 						//printf("filedescrip: %s\n", argv[argParse]);
 						int newIO = strtol(argv[argParse++], NULL, 10);
 						//printf("newIO: %d\n", newIO );
-						//printf("FUCKKKKKKKKKKKKKKKKKKKKK%d\n", fidList[2]);
-						//printf("fidlist shiiit real newIO: %d\n", fidList[newIO] );
+						//printf("fidlist real newIO: %d\n", fidList[newIO] );
 						dup2(fidList[newIO], i);						
 					}
 					//now that IO is rewritten, get the string
 					//argParse should now be 4, the position of the char* for our command
 					char* newCmd = argv[argParse++];
 					//printf("passed in command: %s\n", newCmd);
-
 					//now store the arguments for CMD in a new array.
 					int argSize = optEnd-argParse+1;
-					//printf("FUCK 1\n" );
 					char** newArgs = NULL;
-					//printf("FUCK 2\n" );
 					newArgs = (char*) malloc((argSize+1)*sizeof(char *));/////may be used uninit in this func
-					//printf("FUCK 3\n" );
 					int newArgIndex;
-					//printf("FUCK 4\n" );
-					//printf("argSize:     %d\n", argSize);
+					//printf("argSize: %d\n", argSize);
 					newArgs[0]=newCmd;
 					for (newArgIndex = 1; newArgIndex < argSize; newArgIndex++){
 						newArgs[newArgIndex] = argv[argParse++];
@@ -182,8 +174,6 @@ int main(int argc, char* argv[]){
 				//waitpid(childPid, &status, 0);
 			}	break;
 			
-			default:
-				printf("%s\n", "No match found.");
 		}
 	}
 	for (int i = 0; i < numFid; i++){
