@@ -26,14 +26,22 @@
 #define RSYNC 'l'
 #define SYNC 'm'
 #define TRUNC 'n'
+#define RDWR 'o'
+#define PIPE 'p'
+#define WAIT 'q'
+
+struct Command {
+	int pid;
+	char[100] name;
+};
 
 int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
-	pid_t* pidList = (pid_t*) malloc(argc*sizeof(pid_t));
+	struct Commands* commandList = (pid_t*) malloc(argc*sizeof(Command));
 	int* fidList = (int*) malloc(argc*sizeof(int));
-	int numPid = 0;
+	int numCmd = 0;
 	int numFid = 0;
 	int fid = 0;
 	int oflags = 0;
@@ -56,7 +64,10 @@ int main(int argc, char* argv[]){
 		{"rsync", noarg, noflag, RSYNC},
 		{"sync", noarg, noflag, SYNC},
 		{"trunc", noarg, noflag, TRUNC},
-		{0       ,  0, 0,  0 } 
+		{"rdwr", hasarg, noflag, RDWR},
+		{"pipe", noarg, noflag, PIPE},
+		{"wait", noarg, noflag, WAIT},
+		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
 
@@ -64,7 +75,7 @@ int main(int argc, char* argv[]){
 	int option_ind = 0;
 	while (1){ 
 		optVal = getopt_long(argc, argv, "", optionlist, &option_ind); //option_ind is the option's index in argv[].
-		//global var optarg now points to potion_ind+1, and optind to the index of the next index (first non-option 
+		//global var optarg now points to option_ind+1, and optind to the index of the next index (first non-option 
 		//in argv[] if no more options.
 		if (optVal == '?'){//occurs when we find an option without the appropriate argument
 			fprintf(stderr, "%s is missing an argument\n", optionlist[option_ind].name);
@@ -74,11 +85,11 @@ int main(int argc, char* argv[]){
 		if (optVal == -1){//no more options to parse
 			break;
 		}
-		//use optVal for switch statements, option_ind for access
+		if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg); ///////////////////////////////optarg might need to check if it's another option
+		//use optVal for switch statements, option_ind for access                 /////////////////////////////////
 		switch (optVal) {
-			case 'r'://rdonly
+			case RDONLY://rdonly
 				//we open the file as pointed to by optarg in read only mode
-				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 				fid = open(optarg, O_RDONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in read only mode failed. \n", optarg);
@@ -91,8 +102,7 @@ int main(int argc, char* argv[]){
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
 				break;
-			case 'w'://wronly
-				if(verbose_flag) printf("--%s %s\n",optionlist[option_ind].name, optarg);
+			case WRONLY://wronly
 				fid = open(optarg, O_WRONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
@@ -104,15 +114,43 @@ int main(int argc, char* argv[]){
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
 				break;
-			// case 'v'://verbose
-			// 	//option ind includes --verbose
-			// 	for (int i = optind; i < argc; i++)
-			// 	{
-			// 		printf("%s ", argv[i]);
-			// 	}
-			// 	break;
+			case RDWR:
+				fid = open(optarg, O_RDWR);
+				if (fid == -1){ //there was an error opening a file
+					fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
+					numErrors++;
+					continue;
+				}
+				fidList[numFid++] = fid;
+				break;
+			case PIPE:
+				int pipeFid[2];
+				int createPipe = pipe(pipeFid);
+				if (createPipe == -1){ //there was an error opening a pipe
+					fprintf(stderr, "Createing a pipe failed. \n");
+					numErrors++;
+					continue;
+				}
+				fidList[numFid++] = pipeFid[0];
+				fidList[numFid++] = pipeFid[1];
+				break;
+			case WAIT:
+				int exitStatus;
+				for (int i = 0; i < numCmd; i++){
+					waitpid(pidList[i], &exitStatus, 0);
+					bool exitNorm = WIFEXITED(status);
+					if (exitNorm){
+						int errNum = WEXITSTATUS(exitStatus);
+						printf("%d ", errNum); //print out error number
+						for(int a = optind; a < optEnd; a++){
+							printf("%s ", argv[a]);
+						}
+						printf("\n");
+					}
+				}
+				break;
+
 			case APPEND:
-				if (verbose_flag) printf()
 				break;
 
 			case CLOEXEC:
@@ -145,7 +183,7 @@ int main(int argc, char* argv[]){
 			case TRUNC:
 				break;
 				
-			case 'c':{//command
+			case COMMAND:{//command
 				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
 					//re-reroute I/O
@@ -167,8 +205,6 @@ int main(int argc, char* argv[]){
 					}
 					if(verbose_flag)
 						{
-							printf("--%s ", optionlist[option_ind].name);
-							printf("%s ", optarg);
 							for(int i = optind; i < optEnd; i++)
 							{
 								printf("%s ", argv[i]);
@@ -237,8 +273,8 @@ int main(int argc, char* argv[]){
 						exit(1);
 					}
 				} 
-				//int status;
-				//waitpid(childPid, &status, 0);
+				commandList[numCmd].pid = childPid;
+				commandList[numCmd++].name = 
 			}	break;
 			
 		}
