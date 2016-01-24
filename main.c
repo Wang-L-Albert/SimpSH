@@ -32,18 +32,19 @@
 #define CLOSE 'r'
 #define ABORT 's'
 
-struct command Command{
+struct command{
 	int pid;
-	char name[100];
+	char* name;
 	int cmdPos;
 	int cmdEnd;
 };
+
 
 int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
-	struct Command* cmdList = (pid_t*) malloc(argc*sizeof(Command));
+	struct command* cmdList =  malloc(argc*sizeof(struct command));
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numCmd = 0;
 	int numFid = 0;
@@ -130,7 +131,8 @@ int main(int argc, char* argv[]){
 				fidList[numFid++] = fid;
 				break;
 			case PIPE:
-				int pipeFid[] = (int) malloc(3*sizeof(int));
+				;
+				int* pipeFid = (int*) malloc(3*sizeof(int));
 				int createPipe = pipe(pipeFid);
 				if (createPipe == -1){ //there was an error opening a pipe
 					fprintf(stderr, "Creating a pipe failed. \n");
@@ -142,10 +144,11 @@ int main(int argc, char* argv[]){
 				free (pipeFid);
 				break;
 			case WAIT:
+				;
 				int exitStatus;
 				for (int i = 0; i < numCmd; i++){
 					waitpid(cmdList[i].pid, &exitStatus, 0);
-					bool exitNorm = WIFEXITED(status);
+					int exitNorm = WIFEXITED(exitStatus);
 					if (exitNorm){ //if exited normally
 						int errNum = WEXITSTATUS(exitStatus); //get error status
 						printf("%d ", errNum); //print out error number
@@ -161,6 +164,7 @@ int main(int argc, char* argv[]){
 				}
 				break;
 			case CLOSE:
+				;
 				int error = close(atoi(optarg));
 				if (error == -1){
 					fprintf(stderr, "Creating a pipe failed. \n");
@@ -169,6 +173,7 @@ int main(int argc, char* argv[]){
 				}
 				break;
 			case ABORT:
+				;
 				int *a = 0;
 				int b = *a;
 			case APPEND:
@@ -271,7 +276,7 @@ int main(int argc, char* argv[]){
 				cmdList[numCmd].pid = childPid;
 				cmdList[numCmd].cmdPos = optind+2;
 				cmdList[numCmd].cmdEnd = optEnd;
-				cmdList[numCmd++].name = argv[tempPos];
+				cmdList[numCmd++].name = argv[optind+2];
 			}	break;
 			
 		}
@@ -279,7 +284,7 @@ int main(int argc, char* argv[]){
 	for (int i = 0; i < numFid; i++){
 		close (fidList[i]);
 	}	
-	free(pidList);
+	free(cmdList);
 	free(fidList);
 	exit(numErrors);
 }
