@@ -32,14 +32,16 @@
 
 struct Command {
 	int pid;
-	char[100] name;
+	char name[100];
+	int cmdPos;
+	int cmdEnd;
 };
 
 int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
-	struct Commands* commandList = (pid_t*) malloc(argc*sizeof(Command));
+	struct Commands* cmdList = (pid_t*) malloc(argc*sizeof(Command));
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numCmd = 0;
 	int numFid = 0;
@@ -75,8 +77,8 @@ int main(int argc, char* argv[]){
 	int option_ind = 0;
 	while (1){ 
 		optVal = getopt_long(argc, argv, "", optionlist, &option_ind); //option_ind is the option's index in argv[].
-		//global var optarg now points to option_ind+1, and optind to the index of the next index (first non-option 
-		//in argv[] if no more options.
+		//global var optarg now points to option_ind+1, and optind to the index of the next index after optarg (first non-option 
+		//in argv[] if no more options).
 		if (optVal == '?'){//occurs when we find an option without the appropriate argument
 			fprintf(stderr, "%s is missing an argument\n", optionlist[option_ind].name);
 			numErrors++;
@@ -127,7 +129,7 @@ int main(int argc, char* argv[]){
 				int pipeFid[2];
 				int createPipe = pipe(pipeFid);
 				if (createPipe == -1){ //there was an error opening a pipe
-					fprintf(stderr, "Createing a pipe failed. \n");
+					fprintf(stderr, "Creating a pipe failed. \n");
 					numErrors++;
 					continue;
 				}
@@ -137,12 +139,13 @@ int main(int argc, char* argv[]){
 			case WAIT:
 				int exitStatus;
 				for (int i = 0; i < numCmd; i++){
-					waitpid(pidList[i], &exitStatus, 0);
+					waitpid(cmdList[i].pid, &exitStatus, 0);
 					bool exitNorm = WIFEXITED(status);
-					if (exitNorm){
-						int errNum = WEXITSTATUS(exitStatus);
+					if (exitNorm){ //if exited normally
+						int errNum = WEXITSTATUS(exitStatus); //get error status
 						printf("%d ", errNum); //print out error number
-						for(int a = optind; a < optEnd; a++){
+						//print out option name + arguments
+						for (int a = cmdList[i].cmdPos; a < cmdList[i].cmdEnd; a++) { //starting from the command name, loop till the next option and print
 							printf("%s ", argv[a]);
 						}
 						printf("\n");
@@ -185,59 +188,30 @@ int main(int argc, char* argv[]){
 				
 			case COMMAND:{//command
 				pid_t childPid = fork();
-				if (childPid == 0){ //if it is a child
-					//re-reroute I/O
-					//at this point, optarg points to the next arg, optind next ind
-					//need a variable for end of our stream of arguments
-					int optEnd = optind;
-					//need to check if any more options or not.
-
-					//printf("optind inside command: %d\n", optind);
-					const char dashes[3] = "--";
-					for (int a = optind; a < argc; a++){
-						char * nextOpt = strstr(argv[a], dashes);
-						if(nextOpt != NULL){ //THERE IS ANOTHER OPTION
-							optEnd = a;
-							break;
-						} else if (a == (argc - 1)){
-							optEnd = argc;
-						}
-					}
-					if(verbose_flag)
-						{
-							for(int i = optind; i < optEnd; i++)
-							{
-								printf("%s ", argv[i]);
-							}
-							printf("\n");
-					}
-					/* int tempOptInd = optind;
-					int tempOpt_Ind = 0;
-					printf("optind before getopt: %d\n", optind);
-					getopt_long(argc, argv, "", optionlist, &tempOpt_Ind);
-					printf("optind after getopt: %d\n", optind);
-					if (optind <= tempOptInd){//would only be true if no more options and it went back to first non-opt arg
-						printf("argc:   %d\n",argc);
+				int optEnd = optind;
+				//need to check if any more options or not.
+				//printf("optind inside command: %d\n", optind);
+				const char dashes[3] = "--";
+				for (int a = optind; a < argc; a++){
+					char * nextOpt = strstr(argv[a], dashes);
+					if(nextOpt != NULL){ //THERE IS ANOTHER OPTION
+						optEnd = a;
+						break;
+					} else if (a == (argc - 1)){
 						optEnd = argc;
-
-					} else { //are more --commands
-				
-						optEnd = optind-2;
-						optind = optEnd;//undo the search, we only want to verify there was another one. 
-					printf("optind inside else:  %d\n", optind);
 					}
-					*/
-					//now three times from option_ind+1 to get the I/O re-routes
+				}
+				if(verbose_flag)
+					{
+						for(int i = optind; i < optEnd; i++)
+						{
+							printf("%s ", argv[i]);
+						}
+						printf("\n");
+				}
+				if (childPid == 0){ //if it is a child
+					//now three times from optind-1 to get the I/O re-routes
 					int argParse = optind-1;
-					//printf("option_ind: %d\n", option_ind);
-					//printf("OptEnd: %d\n", optEnd);
-					//printf("tempOptInd: %d\n", tempOptInd);
-					//printf("argParse: %d\n", argParse);
-					// dup2(3,0);
-					// dup2(5,2);
-					// printf("NOOOOOOOOOOOOOOOO 1\n" );
-					// dup2(4,1);
-					
 					for (int i = 0; i < 3; i++){
 						//printf("inside for loop: argParse: %d\n", argParse);
 						//printf("filedescrip: %s\n", argv[argParse]);
@@ -273,8 +247,10 @@ int main(int argc, char* argv[]){
 						exit(1);
 					}
 				} 
-				commandList[numCmd].pid = childPid;
-				commandList[numCmd++].name = 
+				cmdList[numCmd].pid = childPid;
+				cmdList[numCmd].cmdPos = optind+2;
+				cmdList[numCmd].cmdEnd = optEnd;
+				cmdList[numCmd++].name = argv[tempPos];
 			}	break;
 			
 		}
