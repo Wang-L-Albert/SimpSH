@@ -29,6 +29,8 @@
 #define RDWR 'o'
 #define PIPE 'p'
 #define WAIT 'q'
+#define CLOSE 'r'
+#define ABORT 's'
 
 struct Command {
 	int pid;
@@ -41,7 +43,7 @@ int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
-	struct Commands* cmdList = (pid_t*) malloc(argc*sizeof(Command));
+	struct Command* cmdList = (pid_t*) malloc(argc*sizeof(Command));
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numCmd = 0;
 	int numFid = 0;
@@ -69,6 +71,8 @@ int main(int argc, char* argv[]){
 		{"rdwr", hasarg, noflag, RDWR},
 		{"pipe", noarg, noflag, PIPE},
 		{"wait", noarg, noflag, WAIT},
+		{"close", hasarg, noflag, CLOSE},
+		{"abort", noarg, noflag, ABORT},
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -126,7 +130,7 @@ int main(int argc, char* argv[]){
 				fidList[numFid++] = fid;
 				break;
 			case PIPE:
-				int pipeFid[2];
+				int pipeFid[] = (int) malloc(3*sizeof(int));
 				int createPipe = pipe(pipeFid);
 				if (createPipe == -1){ //there was an error opening a pipe
 					fprintf(stderr, "Creating a pipe failed. \n");
@@ -135,6 +139,7 @@ int main(int argc, char* argv[]){
 				}
 				fidList[numFid++] = pipeFid[0];
 				fidList[numFid++] = pipeFid[1];
+				free (pipeFid);
 				break;
 			case WAIT:
 				int exitStatus;
@@ -155,7 +160,17 @@ int main(int argc, char* argv[]){
 					close (fidList[b]);
 				}
 				break;
-
+			case CLOSE:
+				int error = close(atoi(optarg));
+				if (error == -1){
+					fprintf(stderr, "Creating a pipe failed. \n");
+					numErrors++;
+					continue;
+				}
+				break;
+			case ABORT:
+				int *a = 0;
+				int b = *a;
 			case APPEND:
 				break;
 
