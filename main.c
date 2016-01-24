@@ -32,7 +32,7 @@
 #define CLOSE 'r'
 #define ABORT 's'
 
-struct Command {
+struct command Command{
 	int pid;
 	char name[100];
 	int cmdPos;
