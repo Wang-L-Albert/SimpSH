@@ -1,6 +1,5 @@
 CC = gcc
 CFLAGS = -g -Wall -Wextra -Wno-unused -Werror -std=c99
-PATH = $PATH:/usr/local/cs/bin
 EXECUTABLE_NAME = simpsh
 
 default: main.c

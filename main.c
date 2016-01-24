@@ -7,6 +7,26 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#define noarg 0
+#define hasarg 1
+#define noflag 0
+
+#define RDONLY 'a'
+#define WRONLY 'b'
+#define COMMAND 'c'
+#define APPEND 'd'
+#define CLOEXEC 'e'
+#define CREAT 'f'
+#define DIRECTORY 'g'
+#define DSYNC 'h'
+#define EXCL 'i'
+#define NOFOLLOW 'j'
+#define NONBLOCK 'k'
+#define RSYNC 'l'
+#define SYNC 'm'
+#define TRUNC 'n'
+
 int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
@@ -16,13 +36,26 @@ int main(int argc, char* argv[]){
 	int numPid = 0;
 	int numFid = 0;
 	int fid = 0;
+	int oflags = 0;
+	
 	static int verbose_flag = 0;
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
-		{"rdonly",  1, 0, 'r'},
-		{"wronly",  1, 0, 'w'},
-		{"verbose", 0, &verbose_flag, 1},
-		{"command", 1, 0, 'c'},
+		{"rdonly",  hasarg, noflag, RDONLY},
+		{"wronly",  hasarg, noflag, WRONLY},
+		{"verbose", noflag, &verbose_flag, 1},
+		{"command", hasarg, noflag, COMMAND},
+		{"append", noarg, noflag, APPEND},
+		{"cloexec", noarg, noflag, CLOEXEC},
+		{"creat", noarg, noflag, CREAT},
+		{"directory", noarg, noflag, DIRECTORY},
+		{"dsync", noarg, noflag, DSYNC},
+		{"excl", noarg, noflag, EXCL},
+		{"nofollow", noarg, noflag, NOFOLLOW},
+		{"nonblock", noarg, noflag, NONBLOCK},
+		{"rsync", noarg, noflag, RSYNC},
+		{"sync", noarg, noflag, SYNC},
+		{"trunc", noarg, noflag, TRUNC},
 		{0       ,  0, 0,  0 } 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -78,6 +111,40 @@ int main(int argc, char* argv[]){
 			// 		printf("%s ", argv[i]);
 			// 	}
 			// 	break;
+			case APPEND:
+				if (verbose_flag) printf()
+				break;
+
+			case CLOEXEC:
+				break;
+
+			case CREAT:
+				break;
+
+			case DIRECTORY:
+				break;
+
+			case DSYNC:
+				break;
+
+			case EXCL:
+				break;
+
+			case NOFOLLOW:
+				break;
+
+			case NONBLOCK:
+				break;
+
+			case RSYNC:
+				break;
+
+			case SYNC:
+				break;
+
+			case TRUNC:
+				break;
+				
 			case 'c':{//command
 				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
