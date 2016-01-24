@@ -151,6 +151,9 @@ int main(int argc, char* argv[]){
 						printf("\n");
 					}
 				}
+				for (int b = 0; b < numFid; b++){
+					close (fidList[b]);
+				}
 				break;
 
 			case APPEND:
@@ -240,6 +243,9 @@ int main(int argc, char* argv[]){
 					//printf("newArgIndex: %d\n", newArgIndex);
 					newArgs[newArgIndex] = NULL;
 					//carry out new execution
+					for (int b = 0; b < numFid; b++){
+						close (fidList[b]);
+					}
 					int failedExec = execvp(newCmd, newArgs);
 					if (failedExec == -1){
 						fprintf(stderr, "Executing command %s failed. \n", newCmd);
