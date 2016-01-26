@@ -361,6 +361,7 @@ int main(int argc, char* argv[]){
 				cmdList[numCmd].cmdEnd = optEnd;
 				for (int d = optind+2; d < optEnd; d++){
 					strcat(cmdList[numCmd].cmdArg, argv[d]);
+					strcat(cmdList[numCmd].cmdArg, " ");
 				}
 				cmdList[numCmd++].name = argv[optind+2];
 			}	break;
