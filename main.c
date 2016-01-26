@@ -39,6 +39,7 @@ struct command{
 	char* name;
 	int cmdPos;
 	int cmdEnd;
+	char cmdArgs[200];
 };
 
 
@@ -174,10 +175,7 @@ int main(int argc, char* argv[]){
 							int errNum = WEXITSTATUS(exitStatus); //get error status
 							printf("%d ", errNum); //print out error number
 							//print out option name + arguments
-							for (int a = cmdList[i].cmdPos; a < cmdList[i].cmdEnd; a++) { //starting from the command name, loop till the next option and print
-								printf("%s ", argv[a]);
-							}
-							printf("\n");
+							printf("%s\n", cmdList[i].cmdArgs);
 						}
 					}
 					
@@ -361,6 +359,9 @@ int main(int argc, char* argv[]){
 				cmdList[numCmd].pid = childPid;
 				cmdList[numCmd].cmdPos = optind+2;
 				cmdList[numCmd].cmdEnd = optEnd;
+				for (int d = optind+2; d < optEnd; d++){
+					strcat(cmdList[numCmd].cmdArg, argv[d]);
+				}
 				cmdList[numCmd++].name = argv[optind+2];
 			}	break;
 			
