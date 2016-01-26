@@ -276,7 +276,6 @@ int main(int argc, char* argv[]){
 				break;
 				
 			case COMMAND:{//command
-				pid_t childPid = fork();
 				int optEnd = optind;
 				//need to check if any more options or not.
 				//printf("optind inside command: %d\n", optind);
@@ -299,6 +298,25 @@ int main(int argc, char* argv[]){
 						}
 						printf("\n");
 				}
+				//check for false fd's
+				int fidCheck = optind-1;
+				int falseFid = 0;
+				for (int i = 0; i < 3; i++){
+					//printf("inside for loop: argParse: %d\n", argParse);
+					//printf("filedescrip: %s\n", argv[argParse]);
+					int newIO = strtol(argv[fidCheck++], NULL, 10);
+					if (newIO == -1){
+						fprintf(stderr, "An invalid file descriptor was passed into command");
+						falseFid = 1;
+						numErrors++;
+						break;
+					}				
+				}
+				if (falseFid){
+					break;
+				}
+				//check for valid fd's
+				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
 					//now three times from optind-1 to get the I/O re-routes
 					int argParse = optind-1;
