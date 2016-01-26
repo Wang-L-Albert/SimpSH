@@ -99,10 +99,11 @@ int main(int argc, char* argv[]){
 			case RDONLY://rdonly
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 				//we open the file as pointed to by optarg in read only mode
-				fid = open(optarg, O_RDONLY);
+				fid = open(optarg, O_RDONLY | oflags, 0777);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in read only mode failed. \n", optarg);
 					numErrors++;
+					fidList[numFid++] = -1;
 					continue;
 				}
 				fidList[numFid++] = fid;
@@ -114,11 +115,11 @@ int main(int argc, char* argv[]){
 			case WRONLY://wronly
 			{
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-				fid = open(optarg, O_WRONLY);
+				fid = open(optarg, O_WRONLY | oflags, 0777);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
-					fprintf(stderr, "fuck");
 					numErrors++;
+					fidList[numFid++] = -1;
 					continue;
 				}
 				fidList[numFid++] = fid;
@@ -130,10 +131,11 @@ int main(int argc, char* argv[]){
 			case RDWR:
 				{
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-					fid = open(optarg, O_RDWR);
+					fid = open(optarg, O_RDWR | oflags, 0777);
 					if (fid == -1){ //there was an error opening a file
 						fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
 						numErrors++;
+						fidList[numFid++] = -1;
 						continue;
 					}
 					fidList[numFid++] = fid;
@@ -164,13 +166,16 @@ int main(int argc, char* argv[]){
 						close (fidList[b]);
 					}
 					int exitStatus;
+					printf("numcmd = %d\n", numCmd);
 					for (int i = 0; i < numCmd; i++){
-						printf("waiting on %s\n", cmdList[i].name);
+						printf("waiting on %d, %s\n", i, cmdList[i].name);
 						waitpid(cmdList[i].pid, &exitStatus, 0);
 						printf("Finished waiting on %s\n", cmdList[i].name);
 						int exitNorm = WIFEXITED(exitStatus);
 						if (exitNorm){ //if exited normally
 							printf("%s exited normally\n", cmdList[i].name);
+							printf("%s is in position %d \n", cmdList[i].name, cmdList[i].cmdPos);
+							printf("%s ends at %d \n", cmdList[i].name, cmdList[i].cmdEnd);
 							int errNum = WEXITSTATUS(exitStatus); //get error status
 							printf("%d ", errNum); //print out error number
 							//print out option name + arguments
@@ -187,6 +192,7 @@ int main(int argc, char* argv[]){
 				{
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 					int error = close(fidList[atoi(optarg)]);
+					fidList[atoi(optarg)] = -1;
 					if (error == -1){
 						fprintf(stderr, "Closing file descriptor %d failed. \n", atoi(optarg));
 						numErrors++;
@@ -305,8 +311,8 @@ int main(int argc, char* argv[]){
 					//printf("inside for loop: argParse: %d\n", argParse);
 					//printf("filedescrip: %s\n", argv[argParse]);
 					int newIO = strtol(argv[fidCheck++], NULL, 10);
-					if (newIO == -1){
-						fprintf(stderr, "An invalid file descriptor was passed into command");
+					if (fidList[newIO] == -1){
+						fprintf(stderr, "An invalid file descriptor was passed into command \n");
 						falseFid = 1;
 						numErrors++;
 						break;
