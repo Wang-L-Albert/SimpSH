@@ -94,10 +94,10 @@ int main(int argc, char* argv[]){
 		if (optVal == -1){//no more options to parse
 			break;
 		}
-		if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg); ///////////////////////////////optarg might need to check if it's another option
 		//use optVal for switch statements, option_ind for access                 /////////////////////////////////
 		switch (optVal) {
 			case RDONLY://rdonly
+				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 				//we open the file as pointed to by optarg in read only mode
 				fid = open(optarg, O_RDONLY);
 				if (fid == -1){ //there was an error opening a file
@@ -113,6 +113,7 @@ int main(int argc, char* argv[]){
 				break;
 			case WRONLY://wronly
 			{
+				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 				fid = open(optarg, O_WRONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
@@ -128,6 +129,7 @@ int main(int argc, char* argv[]){
 				break;
 			case RDWR:
 				{
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 					fid = open(optarg, O_RDWR);
 					if (fid == -1){ //there was an error opening a file
 						fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
@@ -140,6 +142,7 @@ int main(int argc, char* argv[]){
 				break;
 			case PIPE:
 				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					int* pipeFid = (int*) malloc(3*sizeof(int));
 					int createPipe = pipe(pipeFid);
 					if (createPipe == -1){ //there was an error opening a pipe
@@ -154,6 +157,7 @@ int main(int argc, char* argv[]){
 				break;
 			case WAIT:
 				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					printf("Entering wait \n");
 					for (int b = 0; b < numFid; b++){
 						printf("closing down fid's \n");
@@ -181,6 +185,7 @@ int main(int argc, char* argv[]){
 				break;
 			case CLOSE:
 				{
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 					int error = close(fidList[atoi(optarg)]);
 					if (error == -1){
 						fprintf(stderr, "Closing file descriptor %d failed. \n", atoi(optarg));
@@ -191,57 +196,83 @@ int main(int argc, char* argv[]){
 				break;
 			case ABORT:
 				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					int *a = 0;
 					int b = *a;
 				}
 				break;
 			case APPEND:
 				{
+					if(verbose_flag) printf("--%s ", optionlist[option_ind].name);
 					oflags|=O_APPEND;				
 				}
 				break;
 			case CLOEXEC:
 				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					oflags|=O_CLOEXEC;
 				}
 				break;
 
 			case CREAT:
 				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					oflags|=O_CREAT;
 					break;
 				}
 			case DIRECTORY:
 				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					oflags|=O_DIRECTORY;
 					break;
 				}
 			case DSYNC:
-				oflags|=O_DSYNC;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_DSYNC;
+				}
 				break;
 
 			case EXCL:
-				oflags|=O_EXCL;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_EXCL;
+				}
 				break;
 
 			case NOFOLLOW:
-				oflags|=O_NOFOLLOW;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_NOFOLLOW;
+				}
 				break;
 
 			case NONBLOCK:
-				oflags|=O_NONBLOCK;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_NONBLOCK;
+				}
 				break;
 
 			case RSYNC:
-				oflags|=O_RSYNC;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_RSYNC;
+				}
 				break;
 
 			case SYNC:
-				oflags|=O_SYNC;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_SYNC;
+				}
 				break;
 
 			case TRUNC:
-				oflags|=O_TRUNC;
+				{
+					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
+					oflags|=O_TRUNC;
+				}
 				break;
 				
 			case COMMAND:{//command
@@ -261,6 +292,7 @@ int main(int argc, char* argv[]){
 				}
 				if(verbose_flag)
 					{
+						if(verbose_flag) printf("--%s %s ", optionlist[option_ind].name, optarg);
 						for(int i = optind; i < optEnd; i++)
 						{
 							printf("%s ", argv[i]);
