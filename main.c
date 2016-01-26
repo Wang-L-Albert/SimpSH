@@ -1,4 +1,5 @@
-#include <stdlib.h>
+
+#define _GNU_SOURCE
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#define _GNU_SOURCE
+#include <stdlib.h>
 #include <fcntl.h>
 
 #define noarg 0
@@ -115,6 +116,7 @@ int main(int argc, char* argv[]){
 				fid = open(optarg, O_WRONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
+					fprintf(stderr, "fuck");
 					numErrors++;
 					continue;
 				}
@@ -152,11 +154,19 @@ int main(int argc, char* argv[]){
 				break;
 			case WAIT:
 				{
+					printf("Entering wait \n");
+					for (int b = 0; b < numFid; b++){
+						printf("closing down fid's \n");
+						close (fidList[b]);
+					}
 					int exitStatus;
 					for (int i = 0; i < numCmd; i++){
+						printf("waiting on %s\n", cmdList[i].name);
 						waitpid(cmdList[i].pid, &exitStatus, 0);
+						printf("Finished waiting on %s\n", cmdList[i].name);
 						int exitNorm = WIFEXITED(exitStatus);
 						if (exitNorm){ //if exited normally
+							printf("%s exited normally\n", cmdList[i].name);
 							int errNum = WEXITSTATUS(exitStatus); //get error status
 							printf("%d ", errNum); //print out error number
 							//print out option name + arguments
@@ -166,16 +176,14 @@ int main(int argc, char* argv[]){
 							printf("\n");
 						}
 					}
-					for (int b = 0; b < numFid; b++){
-						close (fidList[b]);
-					}
+					
 				}
 				break;
 			case CLOSE:
 				{
-					int error = close(atoi(optarg));
+					int error = close(fidList[atoi(optarg)]);
 					if (error == -1){
-						fprintf(stderr, "Creating a pipe failed. \n");
+						fprintf(stderr, "Closing file descriptor %d failed. \n", atoi(optarg));
 						numErrors++;
 						continue;
 					}
@@ -194,35 +202,46 @@ int main(int argc, char* argv[]){
 				break;
 			case CLOEXEC:
 				{
-					//oflags|=O_CLOEXEC;
+					oflags|=O_CLOEXEC;
 				}
 				break;
 
 			case CREAT:
-				break;
-
+				{
+					oflags|=O_CREAT;
+					break;
+				}
 			case DIRECTORY:
-				break;
-
+				{
+					oflags|=O_DIRECTORY;
+					break;
+				}
 			case DSYNC:
+				oflags|=O_DSYNC;
 				break;
 
 			case EXCL:
+				oflags|=O_EXCL;
 				break;
 
 			case NOFOLLOW:
+				oflags|=O_NOFOLLOW;
 				break;
 
 			case NONBLOCK:
+				oflags|=O_NONBLOCK;
 				break;
 
 			case RSYNC:
+				oflags|=O_RSYNC;
 				break;
 
 			case SYNC:
+				oflags|=O_SYNC;
 				break;
 
 			case TRUNC:
+				oflags|=O_TRUNC;
 				break;
 				
 			case COMMAND:{//command
