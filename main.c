@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#define _GNU_SOURCE
 #include <fcntl.h>
 
 #define noarg 0
@@ -110,6 +111,7 @@ int main(int argc, char* argv[]){
 				//printf("%d\n", (fidList[numFid-1]));
 				break;
 			case WRONLY://wronly
+			{
 				fid = open(optarg, O_WRONLY);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
@@ -120,66 +122,80 @@ int main(int argc, char* argv[]){
 				//printf("%s\n",("Opened in write only."));
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
+			}
 				break;
 			case RDWR:
-				fid = open(optarg, O_RDWR);
-				if (fid == -1){ //there was an error opening a file
-					fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
-					numErrors++;
-					continue;
+				{
+					fid = open(optarg, O_RDWR);
+					if (fid == -1){ //there was an error opening a file
+						fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
+						numErrors++;
+						continue;
+					}
+					fidList[numFid++] = fid;
 				}
-				fidList[numFid++] = fid;
+				
 				break;
 			case PIPE:
-				;
-				int* pipeFid = (int*) malloc(3*sizeof(int));
-				int createPipe = pipe(pipeFid);
-				if (createPipe == -1){ //there was an error opening a pipe
-					fprintf(stderr, "Creating a pipe failed. \n");
-					numErrors++;
-					continue;
+				{
+					int* pipeFid = (int*) malloc(3*sizeof(int));
+					int createPipe = pipe(pipeFid);
+					if (createPipe == -1){ //there was an error opening a pipe
+						fprintf(stderr, "Creating a pipe failed. \n");
+						numErrors++;
+						continue;
+					}
+					fidList[numFid++] = pipeFid[0];
+					fidList[numFid++] = pipeFid[1];
+					free (pipeFid);
 				}
-				fidList[numFid++] = pipeFid[0];
-				fidList[numFid++] = pipeFid[1];
-				free (pipeFid);
 				break;
 			case WAIT:
-				;
-				int exitStatus;
-				for (int i = 0; i < numCmd; i++){
-					waitpid(cmdList[i].pid, &exitStatus, 0);
-					int exitNorm = WIFEXITED(exitStatus);
-					if (exitNorm){ //if exited normally
-						int errNum = WEXITSTATUS(exitStatus); //get error status
-						printf("%d ", errNum); //print out error number
-						//print out option name + arguments
-						for (int a = cmdList[i].cmdPos; a < cmdList[i].cmdEnd; a++) { //starting from the command name, loop till the next option and print
-							printf("%s ", argv[a]);
+				{
+					int exitStatus;
+					for (int i = 0; i < numCmd; i++){
+						waitpid(cmdList[i].pid, &exitStatus, 0);
+						int exitNorm = WIFEXITED(exitStatus);
+						if (exitNorm){ //if exited normally
+							int errNum = WEXITSTATUS(exitStatus); //get error status
+							printf("%d ", errNum); //print out error number
+							//print out option name + arguments
+							for (int a = cmdList[i].cmdPos; a < cmdList[i].cmdEnd; a++) { //starting from the command name, loop till the next option and print
+								printf("%s ", argv[a]);
+							}
+							printf("\n");
 						}
-						printf("\n");
 					}
-				}
-				for (int b = 0; b < numFid; b++){
-					close (fidList[b]);
+					for (int b = 0; b < numFid; b++){
+						close (fidList[b]);
+					}
 				}
 				break;
 			case CLOSE:
-				;
-				int error = close(atoi(optarg));
-				if (error == -1){
-					fprintf(stderr, "Creating a pipe failed. \n");
-					numErrors++;
-					continue;
+				{
+					int error = close(atoi(optarg));
+					if (error == -1){
+						fprintf(stderr, "Creating a pipe failed. \n");
+						numErrors++;
+						continue;
+					}
 				}
 				break;
 			case ABORT:
-				;
-				int *a = 0;
-				int b = *a;
-			case APPEND:
+				{
+					int *a = 0;
+					int b = *a;
+				}
 				break;
-
+			case APPEND:
+				{
+					oflags|=O_APPEND;				
+				}
+				break;
 			case CLOEXEC:
+				{
+					//oflags|=O_CLOEXEC;
+				}
 				break;
 
 			case CREAT:
