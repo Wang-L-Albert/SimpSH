@@ -38,10 +38,7 @@
 #define IGNORE 'u'
 #define DEFAULT 'v'
 #define PAUSE 'w'
-<<<<<<< HEAD
 
-=======
->>>>>>> c0a2e37385c2707cd2fd2647800c747de80862f3
 struct command{
 	int pid;
 	char* name;
@@ -52,7 +49,6 @@ struct command{
 
 void catch_sig(int sigNum){
 	fprintf(stderr, "Signal %d was caught. \n", sigNum);
-	printf("Signal caught\n");
 	exit(sigNum);
 }
 
@@ -92,15 +88,9 @@ int main(int argc, char* argv[]){
 		{"close", hasarg, noflag, CLOSE},
 		{"abort", noarg, noflag, ABORT},
 		{"catch", hasarg, noflag, CATCH},
-<<<<<<< HEAD
-		{"ignore", hasarg, noflag, IGNORE},
-		{"default", hasarg, noflag, DEFAULT},
-		{"pause", hasarg, noflag, PAUSE},
-=======
-		{"ignore". hasarg, noflag, IGNORE },
+		{"ignore", hasarg, noflag, IGNORE },
 		{"default", hasarg, noflag, DEFAULT},
 		{"pause", noarg, noflag, PAUSE},
->>>>>>> c0a2e37385c2707cd2fd2647800c747de80862f3
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -233,18 +223,12 @@ int main(int argc, char* argv[]){
 				{
 					if (optarg == NULL){
 						fprintf(stderr, "No signal number passed into --catch. \n");
-						printf ("no sig arg");
 						numErrors++;
 						continue;
 					}
-
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 					int signalNum = atoi(optarg);
-					printf("Signal number isssss : %d \n", signalNum);
-
 					signal(signalNum, catch_sig);
-<<<<<<< HEAD
-					printf("should work\n");
-=======
 				}
 				break;
 			case  IGNORE:
@@ -254,24 +238,26 @@ int main(int argc, char* argv[]){
 						numErrors++;
 						continue;
 					}
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_IGN);
->>>>>>> c0a2e37385c2707cd2fd2647800c747de80862f3
 					break;
 				}
 			case  DEFAULT:
 				{
-					int signalNum = atoi(optarg);
-					if (signalNum == NULL){
+					if (optarg == NULL){
 						fprintf(stderr, "No signal number passed into --default. \n");
 						numErrors++;
 						continue;
 					}
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
+					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_DFL);
 				}
 				break;
 			case  PAUSE:
 				{
+					if(verbose_flag) printf("--%s \n", optionlist[option_ind].name);
 					pause();
 				}
 				break;

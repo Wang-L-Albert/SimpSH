@@ -12,6 +12,7 @@ clean:
 	rm errbert.txt
 	rm sortbert.txt
 	rm finbert.txt
+	rm hellbert.txt
 
 check: default
 	echo "hi albert" >> hi.txt
@@ -20,7 +21,10 @@ check: default
 	echo "error bert" >> errbert.txt	
 	echo "z\noooo\na\nwhatthe" >> sortbert.txt
 	chmod +x test.sh
-	./test.sh
+	
+	
+	
+	#./test.sh
 	
 dist: check
 	mkdir lab1-laurenyeung
