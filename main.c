@@ -161,22 +161,22 @@ int main(int argc, char* argv[]){
 			case WAIT:
 				{
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
-					printf("Entering wait \n");
+					//printf("Entering wait \n");
 					for (int b = 0; b < numFid; b++){
-						printf("closing down fid's \n");
+						//printf("closing down fid's \n");
 						close (fidList[b]);
 					}
 					int exitStatus;
-					printf("numcmd = %d\n", numCmd);
+					//printf("numcmd = %d\n", numCmd);
 					for (int i = 0; i < numCmd; i++){
-						printf("waiting on %d, %s\n", i, cmdList[i].name);
+						//printf("waiting on %d, %s\n", i, cmdList[i].name);
 						waitpid(cmdList[i].pid, &exitStatus, 0);
-						printf("Finished waiting on %s\n", cmdList[i].name);
+						//printf("Finished waiting on %s\n", cmdList[i].name);
 						int exitNorm = WIFEXITED(exitStatus);
 						if (exitNorm){ //if exited normally
-							printf("%s exited normally\n", cmdList[i].name);
-							printf("%s is in position %d \n", cmdList[i].name, cmdList[i].cmdPos);
-							printf("%s ends at %d \n", cmdList[i].name, cmdList[i].cmdEnd);
+							//printf("%s exited normally\n", cmdList[i].name);
+							//printf("%s is in position %d \n", cmdList[i].name, cmdList[i].cmdPos);
+							//printf("%s ends at %d \n", cmdList[i].name, cmdList[i].cmdEnd);
 							int errNum = WEXITSTATUS(exitStatus); //get error status
 							printf("%d ", errNum); //print out error number
 							//print out option name + arguments
@@ -366,8 +366,8 @@ int main(int argc, char* argv[]){
 				cmdList[numCmd].cmdPos = optind+2;
 				cmdList[numCmd].cmdEnd = optEnd;
 				for (int d = optind+2; d < optEnd; d++){
-					strcat(cmdList[numCmd].cmdArg, argv[d]);
-					strcat(cmdList[numCmd].cmdArg, " ");
+					strcat(cmdList[numCmd].cmdArgs, argv[d]);
+					strcat(cmdList[numCmd].cmdArgs, " ");
 				}
 				cmdList[numCmd++].name = argv[optind+2];
 			}	break;
