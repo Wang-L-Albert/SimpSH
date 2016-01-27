@@ -21,10 +21,7 @@ check: default
 	echo "error bert" >> errbert.txt	
 	echo "z\noooo\na\nwhatthe" >> sortbert.txt
 	chmod +x test.sh
-	
-	
-	
-	#./test.sh
+	./test.sh
 	
 dist: check
 	mkdir lab1-laurenyeung
