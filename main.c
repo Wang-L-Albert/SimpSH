@@ -35,7 +35,9 @@
 #define CLOSE 'r'
 #define ABORT 's'
 #define CATCH 't'
-
+#define IGNORE 'u'
+#define DEFAULT 'v'
+#define PAUSE 'w'
 struct command{
 	int pid;
 	char* name;
@@ -84,7 +86,10 @@ int main(int argc, char* argv[]){
 		{"wait", noarg, noflag, WAIT},
 		{"close", hasarg, noflag, CLOSE},
 		{"abort", noarg, noflag, ABORT},
-		{"catch", hahsarg, noflag, CATCH},
+		{"catch", hasarg, noflag, CATCH},
+		{"ignore". hasarg, noflag, IGNORE },
+		{"default", hasarg, noflag, DEFAULT},
+		{"pause", noarg, noflag, PAUSE},
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -199,7 +204,7 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 				}
-				break;
+				break;	
 			case ABORT:
 				{
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
@@ -216,9 +221,35 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					signal(signalNum, catch_sig);
+				}
+				break;
+			case  IGNORE:
+				{
+					if(optarg == NULL){
+						fprintf(stderr, "No signal number passed into --ignore. \n");
+						numErrors++;
+						continue;
+					}
+					int signalNum = atoi(optarg);
+					signal(signalNum, SIG_IGN);
 					break;
 				}
-
+			case  DEFAULT:
+				{
+					int signalNum = atoi(optarg);
+					if (signalNum == NULL){
+						fprintf(stderr, "No signal number passed into --default. \n");
+						numErrors++;
+						continue;
+					}
+					signal(signalNum, SIG_DFL);
+				}
+				break;
+			case  PAUSE:
+				{
+					pause();
+				}
+				break;
 			case APPEND:
 				{
 					if(verbose_flag) printf("--%s ", optionlist[option_ind].name);
