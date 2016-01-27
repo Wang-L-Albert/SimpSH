@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <stdio.h>
+#include <signal.h>
 #include <string.h>
 #include <getopt.h>
 #include <sys/types.h>
@@ -33,6 +34,7 @@
 #define WAIT 'q'
 #define CLOSE 'r'
 #define ABORT 's'
+#define CATCH 't'
 
 struct command{
 	int pid;
@@ -41,6 +43,11 @@ struct command{
 	int cmdEnd;
 	char cmdArgs[200];
 };
+
+void catch_sig(int sigNum){
+	fprintf(stderr, "Signal %d was caught. \n", sigNum);
+	exit(sigNum);
+}
 
 
 int numErrors = 0;
@@ -77,6 +84,7 @@ int main(int argc, char* argv[]){
 		{"wait", noarg, noflag, WAIT},
 		{"close", hasarg, noflag, CLOSE},
 		{"abort", noarg, noflag, ABORT},
+		{"catch", hahsarg, noflag, CATCH},
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -199,6 +207,18 @@ int main(int argc, char* argv[]){
 					int b = *a;
 				}
 				break;
+			case CATCH:
+				{
+					int signalNum = atoi(optarg);
+					if (signalNum == NULL){
+						fprintf(stderr, "No signal number passed into --catch. \n");
+						numErrors++;
+						continue;
+					}
+					signal(signalNum, catch_sig);
+					break;
+				}
+
 			case APPEND:
 				{
 					if(verbose_flag) printf("--%s ", optionlist[option_ind].name);
@@ -360,8 +380,8 @@ int main(int argc, char* argv[]){
 				cmdList[numCmd].cmdPos = optind+2;
 				cmdList[numCmd].cmdEnd = optEnd;
 				for (int d = optind+2; d < optEnd; d++){
-					strcat(cmdList[numCmd].cmdArg, argv[d]);
-					strcat(cmdList[numCmd].cmdArg, " ");
+					strcat(cmdList[numCmd].cmdArgs, argv[d]);
+					strcat(cmdList[numCmd].cmdArgs, " ");
 				}
 				cmdList[numCmd++].name = argv[optind+2];
 			}	break;
