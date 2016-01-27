@@ -35,6 +35,9 @@
 #define CLOSE 'r'
 #define ABORT 's'
 #define CATCH 't'
+#define IGNORE 'u'
+#define DEFAULT 'v'
+#define PAUSE 'w'
 
 struct command{
 	int pid;
@@ -46,6 +49,7 @@ struct command{
 
 void catch_sig(int sigNum){
 	fprintf(stderr, "Signal %d was caught. \n", sigNum);
+	printf("Signal caught\n");
 	exit(sigNum);
 }
 
@@ -84,7 +88,10 @@ int main(int argc, char* argv[]){
 		{"wait", noarg, noflag, WAIT},
 		{"close", hasarg, noflag, CLOSE},
 		{"abort", noarg, noflag, ABORT},
-		{"catch", hahsarg, noflag, CATCH},
+		{"catch", hasarg, noflag, CATCH},
+		{"ignore", hasarg, noflag, IGNORE},
+		{"default", hasarg, noflag, DEFAULT},
+		{"pause", hasarg, noflag, PAUSE},
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -215,13 +222,18 @@ int main(int argc, char* argv[]){
 				break;
 			case CATCH:
 				{
-					int signalNum = atoi(optarg);
-					if (signalNum == NULL){
+					if (optarg == NULL){
 						fprintf(stderr, "No signal number passed into --catch. \n");
+						printf ("no sig arg");
 						numErrors++;
 						continue;
 					}
+
+					int signalNum = atoi(optarg);
+					printf("Signal number isssss : %d \n", signalNum);
+
 					signal(signalNum, catch_sig);
+					printf("should work\n");
 					break;
 				}
 
@@ -231,6 +243,7 @@ int main(int argc, char* argv[]){
 					oflags|=O_APPEND;				
 				}
 				break;
+			
 			case CLOEXEC:
 				{
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
@@ -244,12 +257,14 @@ int main(int argc, char* argv[]){
 					oflags|=O_CREAT;
 					break;
 				}
+		
 			case DIRECTORY:
 				{
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					oflags|=O_DIRECTORY;
 					break;
 				}
+		
 			case DSYNC:
 				{
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
