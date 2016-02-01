@@ -85,7 +85,7 @@ int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time
 	s_second = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 	t_sec = u_second + s_second;
 	t_usec = u_microSecond + s_microSecond
-	printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
+	printf("Completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
 		%d seconds and %d microseconds were spent in kernel mode.", totalSec, totalMicrosec, u_second, u_microSecond, s_second, s_microSecond);
 
 }
