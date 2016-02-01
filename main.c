@@ -50,11 +50,45 @@ struct command{
 	char cmdArgs[200];
 };
 
+	struct rusage p_start, c_start, p_end, c_end;
+	time_t t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec;
+	time_t t_c_sec, t_c_usec, c_u_sec, c_u_microsec, c_s_sec, c_s_microsec;
+
 void catch_sig(int sigNum){
 	fprintf(stderr, "Signal %d was caught. \n", sigNum);
 	exit(sigNum);
 }
 
+int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time_t s_second, time_t s_microSecond, time_t totalSec, time_t totalMicrosec ){
+	int getTime2 = getrusage(RUSAGE_SELF, usage);
+	if (getTime2 == -1){
+		fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
+		numErrors++;
+		continue;
+	}
+	//now calculate total time
+	//calculate user time, start with microsec
+	u_microSecond = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
+	//check to see if negative, if so then adjust for time
+	if (u_microSecond < 0){
+		p_end.ru_time.tv_sec--;
+		u_microSecond += 1000000;
+	}
+	u_second = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;
+		//calculate kernel time, start with microsec
+	s_microSecond = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
+	//check to see if negative, if so then adjust for time
+	if (s_microSecond < 0){
+		p_end.ru_time.tv_sec--;
+		s_microSecond += 1000000;
+	}
+	s_second = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
+	t_sec = u_second + s_second;
+	t_usec = u_microSecond + s_microSecond
+	printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
+		%d seconds and %d microseconds were spent in kernel mode.", totalSec, totalMicrosec, u_second, u_microSecond, s_second, s_microSecond);
+
+}
 
 int numErrors = 0;
 int main(int argc, char* argv[]){
@@ -66,7 +100,7 @@ int main(int argc, char* argv[]){
 	int numFid = 0;
 	int fid = 0;
 	int oflags = 0;
-	
+
 	static int verbose_flag = 0;
 	static int profile_flag = 0;
 	struct option optionlist[] = {
@@ -102,10 +136,7 @@ int main(int argc, char* argv[]){
 
 	int optVal; //will store the val returned by getopt_long
 	int option_ind = 0;
-	struct rusage p_start;
-	struct rusage c_start;
-	struct rusage p_end;
-	struct rusage c_end;
+
 	while (1){ 
 		optVal = getopt_long(argc, argv, "", optionlist, &option_ind); //option_ind is the option's index in argv[].
 		//global var optarg now points to option_ind+1, and optind to the index of the next index after optarg (first non-option 
@@ -121,9 +152,10 @@ int main(int argc, char* argv[]){
 		//use optVal for switch statements, option_ind for access                 /////////////////////////////////
 		switch (optVal) {
 			case RDONLY://rdonly
+			{
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 			/*	if(profile_flag) {//get time before it processes
-					int getTime1 = getrusage(RUSAGE_SELF, p_start);
+					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 					if (getTime1 == -1){
 						fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
 						numErrors++;
@@ -144,44 +176,14 @@ int main(int argc, char* argv[]){
 				//printf("%s\n", ("Opened in read only."));
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
-		/*		if(profile_flag){//get time after it processes and calculate total time
-					int getTime2 = getrusage(RUSAGE_SELF, p_end);
-					if (getTime2 == -1){
-						fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
-						numErrors++;
-						continue;
-					}
-					//now calculate total time
-					//calculate user time, start with microsec
-					time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-					//check to see if negative, if so then adjust for time
-					if (u_microsec < 0){
-						p_end.ru_time.tv_sec--;
-						u_microsec += 1000000;
-					}
-					time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;
-
-					//calculate kernel time, start with microsec
-					time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-					//check to see if negative, if so then adjust for time
-					if (s_microsec < 0){
-						p_end.ru_time.tv_sec--;
-						s_microsec += 1000000;
-					}
-					time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-					time_t t_sec = u_sec + s_sec;
-					time_t t_usec = u_microsec + s_microsec
-					printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-						%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-				}*/
+		//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+			}
 				break;
 			case WRONLY://wronly
 			{
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 		/*		if(profile_flag) {//get time before it processes
-					int getTime1 = getrusage(RUSAGE_SELF, p_start);
+					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 					if (getTime1 == -1){
 						fprintf(stderr, "Getting rusage for opening file %s in write only mode failed. \n", optarg);
 						numErrors++;
@@ -200,45 +202,15 @@ int main(int argc, char* argv[]){
 				//printf("%s\n",("Opened in write only."));
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
-		/*		if(profile_flag){//get time after it processes and calculate total time
-					int getTime2 = getrusage(RUSAGE_SELF, p_end);
-					if (getTime2 == -1){
-						fprintf(stderr, "Getting rusage for opening file %s in write only mode failed. \n", optarg);
-						numErrors++;
-						continue;
-					}
-					//now calculate total time
-					//calculate user time, start with microsec
-					time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-					//check to see if negative, if so then adjust for time
-					if (u_microsec < 0){
-						p_end.ru_time.tv_sec--;
-						u_microsec += 1000000;
-					}
-					time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;
-
-					//calculate kernel time, start with microsec
-					time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-					//check to see if negative, if so then adjust for time
-					if (s_microsec < 0){
-						p_end.ru_time.tv_sec--;
-						s_microsec += 1000000;
-					}
-					time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-					time_t t_sec = u_sec + s_sec;
-					time_t t_usec = u_microsec + s_microsec
-					printf("\"--wronly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-						%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-				}*/
+		//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+		
 			}
 				break;
 			case RDWR:
 				{
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 				/*	if(profile_flag) {//get time before it processes
-						int getTime1 = getrusage(RUSAGE_SELF, p_start);
+						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for opening file %s in read and write mode failed. \n", optarg);
 							numErrors++;
@@ -254,38 +226,7 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					fidList[numFid++] = fid;
-		/*		if(profile_flag){//get time after it processes and calculate total time
-					int getTime2 = getrusage(RUSAGE_SELF, p_end);
-					if (getTime2 == -1){
-						fprintf(stderr, "Getting rusage for opening file %s in read and write mode failed. \n", optarg);
-						numErrors++;
-						continue;
-					}
-					//now calculate total time
-					//calculate user time, start with microsec
-					time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-					//check to see if negative, if so then adjust for time
-					if (u_microsec < 0){
-						p_end.ru_time.tv_sec--;
-						u_microsec += 1000000;
-					}
-					time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;
-
-					//calculate kernel time, start with microsec
-					time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-					//check to see if negative, if so then adjust for time
-					if (s_microsec < 0){
-						p_end.ru_time.tv_sec--;
-						s_microsec += 1000000;
-					}
-					time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-					time_t t_sec = u_sec + s_sec;
-					time_t t_usec = u_microsec + s_microsec
-					printf("\"--rdwr\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-						%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-				}*/
+					//profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 
 				}
 				
@@ -294,7 +235,7 @@ int main(int argc, char* argv[]){
 				{
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 				/*	if(profile_flag) {//get time before it processes
-					int getTime1 = getrusage(RUSAGE_SELF, p_start);
+					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for opening a pipe failed. \n");
 							numErrors++;
@@ -312,38 +253,7 @@ int main(int argc, char* argv[]){
 					fidList[numFid++] = pipeFid[1];
 					free (pipeFid); 	
 
-			/*		if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for opening a pipe failed. \n", optarg);
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (u_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							u_microsec += 1000000;
-						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (s_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							s_microsec += 1000000;
-						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
-						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-					}*/
+			//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 				}
 				break;
 			case WAIT:
@@ -351,7 +261,7 @@ int main(int argc, char* argv[]){
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					//DO FOR PARENT
 					if(profile_flag) {//get time before it processes
-					int getTime1 = getrusage(RUSAGE_SELF, p_start);
+					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for wait failed. \n");
 							numErrors++;
@@ -367,12 +277,7 @@ int main(int argc, char* argv[]){
 					//printf("numcmd = %d\n", numCmd);
 
 					//DO FOR CHILDREN
-					time_t t_c_sec;
-					time_t t_c_usec;
-					time_t c_u_sec;
-					time_t c_u_microsec;
-					time_t c_s_sec;
-					time_t c_s_microsec
+					
 					for (int i = 0; i < numCmd; i++){
 						if(profile_flag) {//get time before it processes
 							int getCTime1 = getrusage(RUSAGE_SELF, c_start);
@@ -472,7 +377,7 @@ int main(int argc, char* argv[]){
 				{
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 		/*			if(profile_flag) {//get time before it processes
-						int getTime1 = getrusage(RUSAGE_SELF, p_start);
+						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for close failed. \n");
 							numErrors++;
@@ -486,38 +391,7 @@ int main(int argc, char* argv[]){
 						numErrors++;
 						continue;
 					}
-			/*		if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for closing file descriptor %d failed. \n", atoi(optarg));
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (u_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							u_microsec += 1000000;
-						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (s_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							s_microsec += 1000000;
-						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
-						printf("\"--close\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-					}*/
+				//	profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 				}
 				break;	
 			case ABORT:
@@ -536,7 +410,7 @@ int main(int argc, char* argv[]){
 					}
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 	/*				if(profile_flag) {//get time before it processes
-						int getTime1 = getrusage(RUSAGE_SELF, p_start);
+						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for catch failed. \n");
 							numErrors++;
@@ -545,38 +419,7 @@ int main(int argc, char* argv[]){
 					}	 */
 					int signalNum = atoi(optarg);
 					signal(signalNum, catch_sig);
-	/*				if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for catch failed. \n");
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (u_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							u_microsec += 1000000;
-						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (s_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							s_microsec += 1000000;
-						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
-						printf("\"--catch\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-					}*/
+	//			profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 				}
 				break;
 			case  IGNORE:
@@ -588,7 +431,7 @@ int main(int argc, char* argv[]){
 					}
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 			/*		if(profile_flag) {//get time before it processes
-						int getTime1 = getrusage(RUSAGE_SELF, p_start);
+						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for ignore failed. \n");
 							numErrors++;
@@ -597,38 +440,7 @@ int main(int argc, char* argv[]){
 					}	*/
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_IGN);
-		/*			if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for ignore failed. \n");
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (u_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							u_microsec += 1000000;
-						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (s_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							s_microsec += 1000000;
-						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
-						printf("\"--ignore\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-					}*/
+					//profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 					
 				}
 				break;
@@ -641,7 +453,7 @@ int main(int argc, char* argv[]){
 					}
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
 			/*		if(profile_flag) {//get time before it processes
-						int getTime1 = getrusage(RUSAGE_SELF, p_start);
+						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for default failed. \n");
 							numErrors++;
@@ -650,38 +462,7 @@ int main(int argc, char* argv[]){
 					}	*/
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_DFL);
-			/*		if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for default failed. \n");
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (u_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							u_microsec += 1000000;
-						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (s_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							s_microsec += 1000000;
-						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
-						printf("\"--default\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-					}*/
+			//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 				}
 				break;
 			case  PAUSE:
@@ -791,7 +572,7 @@ int main(int argc, char* argv[]){
 						printf("\n");
 				}
 				if(profile_flag) {//get time before it processes
-					int getTime1 = getrusage(RUSAGE_SELF, p_start);
+					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 					if (getTime1 == -1){
 						fprintf(stderr, "Getting rusage for command failed. \n");
 						numErrors++;
@@ -867,38 +648,7 @@ int main(int argc, char* argv[]){
 					strcat(cmdList[numCmd].cmdArgs, " ");
 				}
 				cmdList[numCmd++].name = argv[optind+2];
-				if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for command failed. \n");
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (u_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							u_microsec += 1000000;
-						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (s_microsec < 0){
-							p_end.ru_time.tv_sec--;
-							s_microsec += 1000000;
-						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
-						printf("\"--command\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
-
-					}
+				profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
 			}	break;
 			
 		}
