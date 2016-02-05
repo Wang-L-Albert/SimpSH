@@ -60,7 +60,7 @@ void catch_sig(int sigNum){
 	exit(sigNum);
 }
 
-void profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time_t s_second, time_t s_microSecond, time_t totalSec, time_t totalMicrosec ){
+void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, time_t* s_second, time_t* s_microSecond, time_t* totalSec, time_t* totalMicrosec ){
 	int getTime2 = getrusage(RUSAGE_SELF, usage);
 	if (getTime2 == -1){
 		fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
@@ -68,23 +68,23 @@ void profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, tim
 	}
 	//now calculate total time
 	//calculate user time, start with microsec
-	u_microSecond = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
+	*u_microSecond = usage->ru_utime.tv_usec - p_start.ru_utime.tv_usec;
 	//check to see if negative, if so then adjust for time
 	if (u_microSecond < 0){
-		p_end.ru_utime.tv_sec--;
-		u_microSecond += 1000000;
+		usage->ru_utime.tv_sec--;
+		*u_microSecond += 1000000;
 	}
-	u_second = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;
+	*u_second = usage->ru_utime.tv_sec - p_start.ru_utime.tv_sec;
 		//calculate kernel time, start with microsec
-	s_microSecond = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
+	*s_microSecond = usage->ru_stime.tv_usec - p_start.ru_stime.tv_usec;
 	//check to see if negative, if so then adjust for time
 	if (s_microSecond < 0){
-		p_end.ru_stime.tv_sec--;
-		s_microSecond += 1000000;
+		usage->ru_stime.tv_sec--;
+		*s_microSecond += 1000000;
 	}
-	s_second = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-	t_sec = u_second + s_second;
-	t_usec = u_microSecond + s_microSecond;
+	*s_second = usage->ru_stime.tv_sec - p_start.ru_stime.tv_sec;
+	*totalSec = u_second + s_second;
+	*totalMicrosec = u_microSecond + s_microSecond;
 	printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) totalSec, (int) totalMicrosec, (int) u_second, (int) u_microSecond, (int) s_second, (int) s_microSecond);
 
 }
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]){
 			case RDONLY://rdonly
 			{
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-			/*	if(profile_flag) {//get time before it processes
+				if(profile_flag) {//get time before it processes
 					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 					if (getTime1 == -1){
 						fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]){
 						fidList[numFid++] = -1;
 						continue;
 					}
-				}*/
+				}
 				//we open the file as pointed to by optarg in read only mode
 				fid = open(optarg, O_RDONLY | oflags, 0777);
 				if (fid == -1){ //there was an error opening a file
@@ -174,13 +174,15 @@ int main(int argc, char* argv[]){
 				//printf("%s\n", ("Opened in read only."));
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
-		//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+				if (profile_flag){
+					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+				}
 			}
 				break;
 			case WRONLY://wronly
 			{
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-		/*		if(profile_flag) {//get time before it processes
+				if(profile_flag) {//get time before it processes
 					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 					if (getTime1 == -1){
 						fprintf(stderr, "Getting rusage for opening file %s in write only mode failed. \n", optarg);
@@ -188,7 +190,7 @@ int main(int argc, char* argv[]){
 						fidList[numFid++] = -1;
 						continue;
 					}
-				}*/
+				}
 				fid = open(optarg, O_WRONLY | oflags, 0777);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in write only mode failed. \n", optarg);
@@ -200,7 +202,9 @@ int main(int argc, char* argv[]){
 				//printf("%s\n",("Opened in write only."));
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
-		//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+				if (profile_flag){
+					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+				}
 		
 			}
 				break;
@@ -224,8 +228,9 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					fidList[numFid++] = fid;
-					//profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
-
+					if (profile_flag){
+						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					}
 				}
 				
 				break;
@@ -251,7 +256,9 @@ int main(int argc, char* argv[]){
 					fidList[numFid++] = pipeFid[1];
 					free (pipeFid); 	
 
-			//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+					if (profile_flag){
+						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					}
 				}
 				break;
 			case WAIT:
@@ -423,7 +430,9 @@ int main(int argc, char* argv[]){
 						numErrors++;
 						continue;
 					}
-				//	profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+					if (profile_flag){
+						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					}
 				}
 				break;	
 			case ABORT:
@@ -441,17 +450,19 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-	/*				if(profile_flag) {//get time before it processes
+					if(profile_flag) {//get time before it processes
 						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for catch failed. \n");
 							numErrors++;
 							continue;
 						}
-					}	 */
+					}	 
 					int signalNum = atoi(optarg);
 					signal(signalNum, catch_sig);
-	//			profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+					if (profile_flag){
+						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					}
 				}
 				break;
 			case  IGNORE:
@@ -462,17 +473,19 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-			/*		if(profile_flag) {//get time before it processes
+					if(profile_flag) {//get time before it processes
 						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for ignore failed. \n");
 							numErrors++;
 							continue;
 						}
-					}	*/
+					}	
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_IGN);
-					//profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+					if (profile_flag){
+						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					}
 					
 				}
 				break;
@@ -484,17 +497,19 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-			/*		if(profile_flag) {//get time before it processes
+					if(profile_flag) {//get time before it processes
 						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for default failed. \n");
 							numErrors++;
 							continue;
 						}
-					}	*/
+					}	
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_DFL);
-			//		profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+					if (profile_flag){
+						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					}
 				}
 				break;
 			case  PAUSE:
@@ -680,7 +695,9 @@ int main(int argc, char* argv[]){
 					strcat(cmdList[numCmd].cmdArgs, " ");
 				}
 				cmdList[numCmd++].name = argv[optind+2];
-				profileEnd(&p_end, u_sec, u_microsec, s_sec, s_microsec, t_sec, t_usec);
+				if (profile_flag){
+					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+				}
 			}	break;
 			
 		}
