@@ -54,6 +54,8 @@ struct command{
 	struct rusage p_start, c_start, p_end, c_end;
 	time_t t_sec=0, t_usec=0, u_sec=0, u_microsec=0, s_sec=0, s_microsec=0;
 	time_t t_c_sec=0, t_c_usec=0, c_u_sec=0, c_u_microsec=0, c_s_sec=0, c_s_microsec=0;
+	float totalParentTime;
+	float totalChildTime;
 
 void catch_sig(int sigNum){
 	fprintf(stderr, "Signal %d was caught. \n", sigNum);
@@ -68,8 +70,19 @@ void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, t
 	}
 	//now calculate total time
 	//calculate user time, start with microsec
-	printf("u_microsecond issss: %d \n", (int)usage->ru_utime.tv_usec );
-	*u_microSecond = (float)usage->ru_utime.tv_usec - (float)p_start.ru_utime.tv_usec;
+	//printf("u_microsecond issss: %d \n", (int)usage->ru_utime.tv_usec );
+
+	float firstUserTime = (float) p_start.ru_utime.tv_sec + (float)((p_start.ru_utime.tv_usec)/1e6); 
+	float finalUserTime = (float) usage->ru_utime.tv_sec + (float)((usage->ru_utime.tv_usec)/1e6); 
+	float totalUserTime = finalUserTime - firstUserTime;
+
+	float firstKernelTime = (float) p_start.ru_stime.tv_sec + (float)((p_start.ru_stime.tv_usec)/1e6); 
+	float finalKernelTime = (float) usage->ru_stime.tv_sec + (float)((usage->ru_stime.tv_usec)/1e6); 
+	float totalKernelTime = finalKernelTime - firstKernelTime;
+
+	float totalTime = totalUserTime + totalKernelTime;
+/*
+	*u_microSecond = usage->ru_utime.tv_usec - p_start.ru_utime.tv_usec;
 	//check to see if negative, if so then adjust for time
 	if (*u_microSecond < 0){
 		usage->ru_utime.tv_sec--;
@@ -85,8 +98,9 @@ void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, t
 	}
 	*s_second = usage->ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 	*totalSec = *u_second + *s_second;
-	*totalMicrosec = *u_microSecond + *s_microSecond;
-	printf("\"--rdonly\" completed in %lu seconds and %lu microseconds. \n %lu seconds and %lu microseconds were spent in user mode. \n %lu seconds and %lu microseconds were spent in kernel mode. \n", (long) *totalSec, (long) *totalMicrosec, (long) *u_second, (long) *u_microSecond, (long) *s_second, (long) *s_microSecond);
+	*totalMicrosec = *u_microSecond + *s_microSecond; */
+	
+	printf("Completed in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", totalTime, totalUserTime, totalKernelTime);
 
 }
 
@@ -267,6 +281,17 @@ int main(int argc, char* argv[]){
 				break;
 			case WAIT:
 				{
+					float c_firstUserTime, c_finalUserTime;
+					float c_totalUserTime = 0;
+					float c_firstKernelTime, c_finalKernelTime;
+					float c_totalKernelTime = 0;
+					float c_totalTime = 0;
+
+					float p_firstUserTime, p_finalUserTime, p_totalUserTime;
+					float p_firstKernelTime, p_finalKernelTime, p_totalKernelTime;
+					float p_totalTime = 0;
+
+
 					if(verbose_flag) printf("--%s\n", optionlist[option_ind].name);
 					//DO FOR PARENT
 					if(profile_flag) {//get time before it processes
@@ -317,6 +342,7 @@ int main(int argc, char* argv[]){
 								numErrors++;
 								continue;
 							}
+							/*
 							//now calculate total time
 							//calculate user time, start with microsec
 							c_u_microsec = c_end.ru_utime.tv_usec-c_start.ru_utime.tv_usec;
@@ -337,8 +363,17 @@ int main(int argc, char* argv[]){
 							c_s_sec = c_end.ru_stime.tv_sec - c_start.ru_stime.tv_sec;
 
 							t_c_sec += u_sec + s_sec;
-							t_c_usec += u_microsec + s_microsec;
+							t_c_usec += u_microsec + s_microsec;*/
+							c_firstUserTime = (float) c_start.ru_utime.tv_sec + (float)((c_start.ru_utime.tv_usec)/1e6); 
+							c_finalUserTime = (float) c_end.ru_utime.tv_sec + (float)((c_end.ru_utime.tv_usec)/1e6); 
+							c_totalUserTime += finalUserTime - firstUserTime;
 
+							c_firstKernelTime = (float) c_start.ru_stime.tv_sec + (float)((c_start.ru_stime.tv_usec)/1e6); 
+							c_finalKernelTime = (float) c_end.ru_stime.tv_sec + (float)((c_end.ru_stime.tv_usec)/1e6); 
+							c_totalKernelTime += finalKernelTime - firstKernelTime;
+
+							c_totalTime += totalUserTime + totalKernelTime;
+						
 						}
 
 
@@ -352,6 +387,7 @@ int main(int argc, char* argv[]){
 							numErrors++;
 							continue;
 						}
+						/*
 						//now calculate total time
 						//calculate user time, start with microsec
 						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
@@ -376,42 +412,19 @@ int main(int argc, char* argv[]){
 
 						t_sec = u_sec + s_sec;
 						t_usec = u_microsec + s_microsec;
+						*/
+						p_firstUserTime = (float) c_start.ru_utime.tv_sec + (float)((c_start.ru_utime.tv_usec)/1e6); 
+						p_finalUserTime = (float) c_end.ru_utime.tv_sec + (float)((c_end.ru_utime.tv_usec)/1e6); 
+						p_totalUserTime = finalUserTime - firstUserTime;
 
-			/*			//child
-						int getTime2 = getrusage(RUSAGE_CHILDREN, &c_end);
-						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for all children failed. \n", optarg);
-							numErrors++;
-							continue;
-						}
-						//now calculate total time
-						//calculate user time, start with microsec
+						p_firstKernelTime = (float) c_start.ru_stime.tv_sec + (float)((c_start.ru_stime.tv_usec)/1e6); 
+						p_finalKernelTIme = (float) c_end.ru_stime.tv_sec + (float)((c_end.ru_stime.tv_usec)/1e6); 
+						p_totalKernelTime = finalKernelTime - firstKernelTime;
 
-						c_u_microsec = c_end.ru_utime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (c_u_microsec < 0){
-							c_end.ru_utime.tv_sec--;
-							c_u_microsec += 1000000;
-						}
-						c_u_sec = c_end.ru_utime.tv_sec;	
-
-						//calculate kernel time, start with microsec
-						c_s_microsec = c_end.ru_stime.tv_usec;
-						//check to see if negative, if so then adjust for time
-						if (c_s_microsec < 0){
-							c_end.ru_stime.tv_sec--;
-							c_s_microsec += 1000000;
-						}
-						c_s_sec = c_end.ru_stime.tv_sec;
-
-						t_c_sec = c_u_sec + c_s_sec;
-						t_c_usec = c_u_microsec + c_s_microsec;*/
-
-						t_sec = u_sec + s_sec;
-						t_usec = u_microsec + s_microsec;
-						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) t_sec, (int) t_usec, (int) u_sec, (int) u_microsec, (int) s_sec, (int) s_microsec);
-						printf("All children completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) t_c_sec, (int) t_c_usec, (int) c_u_sec, (int) c_u_microsec, (int) c_s_sec,(int)  c_s_microsec);
-
+						p_totalTime = totalUserTime + totalKernelTime;
+						
+						printf("\"--wait\" completed in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", p_totalTime, p_totalUserTime, p_totalKernelTime);
+						printf("All children ompleted in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", c_totalTime, c_totalUserTime, c_totalKernelTime);
 					}
 					
 				}
