@@ -424,7 +424,7 @@ int main(int argc, char* argv[]){
 						p_totalTime = p_totalUserTime + p_totalKernelTime;
 						
 						printf("\"--wait\" completed in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", p_totalTime, p_totalUserTime, p_totalKernelTime);
-						printf("All children ompleted in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", c_totalTime, c_totalUserTime, c_totalKernelTime);
+						printf("All children completed in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", c_totalTime, c_totalUserTime, c_totalKernelTime);
 					}
 					
 				}
