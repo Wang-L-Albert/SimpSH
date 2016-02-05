@@ -85,8 +85,7 @@ int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time
 	s_second = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 	t_sec = u_second + s_second;
 	t_usec = u_microSecond + s_microSecond;
-	printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-		%d seconds and %d microseconds were spent in kernel mode.", totalSec, totalMicrosec, u_second, u_microSecond, s_second, s_microSecond);
+	printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) totalSec, (int) totalMicrosec, (int) u_second, (int) u_microSecond, (int) s_second, (int) s_microSecond);
 
 }
 
@@ -400,9 +399,9 @@ int main(int argc, char* argv[]){
 						t_sec = u_sec + s_sec;
 						t_usec = u_microsec + s_microsec
 						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
+							%d seconds and %d microseconds were spent in kernel mode.", (int) t_sec, (int) t_usec, (int) u_sec, (int) u_microsec, (int) s_sec, (int) s_microsec);
 						printf("All children completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", t_c_sec, t_c_usec, c_u_sec, c_u_microsec, c_s_sec, c_s_microsec);
+							%d seconds and %d microseconds were spent in kernel mode.", (int) t_c_sec, (int) t_c_usec, (int) c_u_sec, (int) c_u_microsec, (int) c_s_sec,(int)  c_s_microsec);
 
 					}
 					
