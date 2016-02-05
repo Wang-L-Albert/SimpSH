@@ -370,9 +370,9 @@ int main(int argc, char* argv[]){
 
 							c_firstKernelTime = (float) c_start.ru_stime.tv_sec + (float)((c_start.ru_stime.tv_usec)/1e6); 
 							c_finalKernelTime = (float) c_end.ru_stime.tv_sec + (float)((c_end.ru_stime.tv_usec)/1e6); 
-							c_totalKernelTime += finalKernelTime - firstKernelTime;
+							c_totalKernelTime += c_finalKernelTime - c_firstKernelTime;
 
-							c_totalTime += totalUserTime + totalKernelTime;
+							c_totalTime += c_totalUserTime + c_totalKernelTime;
 						
 						}
 
@@ -413,15 +413,15 @@ int main(int argc, char* argv[]){
 						t_sec = u_sec + s_sec;
 						t_usec = u_microsec + s_microsec;
 						*/
-						p_firstUserTime = (float) c_start.ru_utime.tv_sec + (float)((c_start.ru_utime.tv_usec)/1e6); 
-						p_finalUserTime = (float) c_end.ru_utime.tv_sec + (float)((c_end.ru_utime.tv_usec)/1e6); 
-						p_totalUserTime = finalUserTime - firstUserTime;
+						p_firstUserTime = (float) p_start.ru_utime.tv_sec + (float)((p_start.ru_utime.tv_usec)/1e6); 
+						p_finalUserTime = (float) p_end.ru_utime.tv_sec + (float)((p_end.ru_utime.tv_usec)/1e6); 
+						p_totalUserTime = p_finalUserTime - p_firstUserTime;
 
-						p_firstKernelTime = (float) c_start.ru_stime.tv_sec + (float)((c_start.ru_stime.tv_usec)/1e6); 
-						p_finalKernelTIme = (float) c_end.ru_stime.tv_sec + (float)((c_end.ru_stime.tv_usec)/1e6); 
-						p_totalKernelTime = finalKernelTime - firstKernelTime;
+						p_firstKernelTime = (float) p_start.ru_stime.tv_sec + (float)((p_start.ru_stime.tv_usec)/1e6); 
+						p_finalKernelTIme = (float) p_end.ru_stime.tv_sec + (float)((p_end.ru_stime.tv_usec)/1e6); 
+						p_totalKernelTime = p_finalKernelTime - p_firstKernelTime;
 
-						p_totalTime = totalUserTime + totalKernelTime;
+						p_totalTime = p_totalUserTime + p_totalKernelTime;
 						
 						printf("\"--wait\" completed in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", p_totalTime, p_totalUserTime, p_totalKernelTime);
 						printf("All children ompleted in %f seconds. \n %f seconds were spent in user mode. \n %f seconds were spent in kernel mode. \n", c_totalTime, c_totalUserTime, c_totalKernelTime);
