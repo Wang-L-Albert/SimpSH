@@ -366,7 +366,7 @@ int main(int argc, char* argv[]){
 							t_c_usec += u_microsec + s_microsec;*/
 							c_firstUserTime = (float) c_start.ru_utime.tv_sec + (float)((c_start.ru_utime.tv_usec)/1e6); 
 							c_finalUserTime = (float) c_end.ru_utime.tv_sec + (float)((c_end.ru_utime.tv_usec)/1e6); 
-							c_totalUserTime += finalUserTime - firstUserTime;
+							c_totalUserTime += c_finalUserTime - c_firstUserTime;
 
 							c_firstKernelTime = (float) c_start.ru_stime.tv_sec + (float)((c_start.ru_stime.tv_usec)/1e6); 
 							c_finalKernelTime = (float) c_end.ru_stime.tv_sec + (float)((c_end.ru_stime.tv_usec)/1e6); 
@@ -418,7 +418,7 @@ int main(int argc, char* argv[]){
 						p_totalUserTime = p_finalUserTime - p_firstUserTime;
 
 						p_firstKernelTime = (float) p_start.ru_stime.tv_sec + (float)((p_start.ru_stime.tv_usec)/1e6); 
-						p_finalKernelTIme = (float) p_end.ru_stime.tv_sec + (float)((p_end.ru_stime.tv_usec)/1e6); 
+						p_finalKernelTime = (float) p_end.ru_stime.tv_sec + (float)((p_end.ru_stime.tv_usec)/1e6); 
 						p_totalKernelTime = p_finalKernelTime - p_firstKernelTime;
 
 						p_totalTime = p_totalUserTime + p_totalKernelTime;
