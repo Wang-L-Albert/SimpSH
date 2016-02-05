@@ -69,7 +69,7 @@ void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, t
 	//now calculate total time
 	//calculate user time, start with microsec
 	printf("u_microsecond issss: %d \n", (int)usage->ru_utime.tv_usec );
-	*u_microSecond = usage->ru_utime.tv_usec - p_start.ru_utime.tv_usec;
+	*u_microSecond = (float)usage->ru_utime.tv_usec - (float)p_start.ru_utime.tv_usec;
 	//check to see if negative, if so then adjust for time
 	if (*u_microSecond < 0){
 		usage->ru_utime.tv_sec--;
@@ -289,7 +289,7 @@ int main(int argc, char* argv[]){
 					
 					for (int i = 0; i < numCmd; i++){
 						if(profile_flag) {//get time before it processes
-							int getCTime1 = getrusage(RUSAGE_SELF, &c_start);
+							int getCTime1 = getrusage(RUSAGE_CHILDREN, &c_start);
 							if (getCTime1 == -1){
 								fprintf(stderr, "Getting rusage for child failed. \n");
 								numErrors++;
@@ -311,7 +311,7 @@ int main(int argc, char* argv[]){
 						}
 
 						if(profile_flag){//get time after it processes and calculate total time
-							int getCTime2 = getrusage(RUSAGE_SELF, &p_end);
+							int getCTime2 = getrusage(RUSAGE_CHILDREN, &c_end);
 							if (getCTime2 == -1){
 								fprintf(stderr, "Getting rusage for child failed. \n");
 								numErrors++;
@@ -322,7 +322,7 @@ int main(int argc, char* argv[]){
 							c_u_microsec = c_end.ru_utime.tv_usec-c_start.ru_utime.tv_usec;
 							//check to see if negative, if so then adjust for time
 							if (u_microsec < 0){
-								p_end.ru_utime.tv_sec--;
+								c_end.ru_utime.tv_sec--;
 								u_microsec += 1000000;
 							}
 							c_u_sec = c_end.ru_utime.tv_sec - c_start.ru_utime.tv_sec;		
@@ -331,10 +331,10 @@ int main(int argc, char* argv[]){
 							c_s_microsec = c_end.ru_stime.tv_usec-c_start.ru_stime.tv_usec;
 							//check to see if negative, if so then adjust for time
 							if (s_microsec < 0){
-								p_end.ru_stime.tv_sec--;
+								c_end.ru_stime.tv_sec--;
 								s_microsec += 1000000;
 							}
-							c_s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
+							c_s_sec = c_end.ru_stime.tv_sec - c_start.ru_stime.tv_sec;
 
 							t_c_sec += u_sec + s_sec;
 							t_c_usec += u_microsec + s_microsec;
