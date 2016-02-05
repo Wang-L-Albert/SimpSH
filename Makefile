@@ -12,7 +12,8 @@ clean:
 	rm errbert.txt
 	rm sortbert.txt
 	rm finbert.txt
-	rm hellbert.txt
+#	rm hellbert.txt
+	rm rand.txt
 
 check: default
 	echo "hi albert" >> hi.txt

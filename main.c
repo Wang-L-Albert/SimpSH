@@ -52,15 +52,15 @@ struct command{
 
 	int numErrors = 0;
 	struct rusage p_start, c_start, p_end, c_end;
-	time_t t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec;
-	time_t t_c_sec, t_c_usec, c_u_sec, c_u_microsec, c_s_sec, c_s_microsec;
+	time_t t_sec=0, t_usec=0, u_sec=0, u_microsec=0, s_sec=0, s_microsec=0;
+	time_t t_c_sec=0, t_c_usec=0, c_u_sec=0, c_u_microsec=0, c_s_sec=0, c_s_microsec=0;
 
 void catch_sig(int sigNum){
 	fprintf(stderr, "Signal %d was caught. \n", sigNum);
 	exit(sigNum);
 }
 
-int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time_t s_second, time_t s_microSecond, time_t totalSec, time_t totalMicrosec ){
+void profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time_t s_second, time_t s_microSecond, time_t totalSec, time_t totalMicrosec ){
 	int getTime2 = getrusage(RUSAGE_SELF, usage);
 	if (getTime2 == -1){
 		fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
@@ -278,7 +278,7 @@ int main(int argc, char* argv[]){
 					
 					for (int i = 0; i < numCmd; i++){
 						if(profile_flag) {//get time before it processes
-							int getCTime1 = getrusage(RUSAGE_SELF, c_start);
+							int getCTime1 = getrusage(RUSAGE_SELF, &c_start);
 							if (getCTime1 == -1){
 								fprintf(stderr, "Getting rusage for child failed. \n");
 								numErrors++;
@@ -300,9 +300,9 @@ int main(int argc, char* argv[]){
 						}
 
 						if(profile_flag){//get time after it processes and calculate total time
-							int getTime2 = getrusage(RUSAGE_SELF, p_end);
-							if (getTime2 == -1){
-								fprintf(stderr, "Getting rusage for child failed. \n", optarg);
+							int getCTime2 = getrusage(RUSAGE_SELF, &p_end);
+							if (getCTime2 == -1){
+								fprintf(stderr, "Getting rusage for child failed. \n");
 								numErrors++;
 								continue;
 							}
@@ -325,8 +325,8 @@ int main(int argc, char* argv[]){
 							}
 							c_s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 
-							t_c_sec = u_sec + s_sec;
-							t_c_usec = u_microsec + s_microsec
+							t_c_sec += u_sec + s_sec;
+							t_c_usec += u_microsec + s_microsec;
 
 						}
 
@@ -335,9 +335,9 @@ int main(int argc, char* argv[]){
 
 					//DOFORPARENT
 					if(profile_flag){//get time after it processes and calculate total time
-						int getTime2 = getrusage(RUSAGE_SELF, p_end);
+						int getTime2 = getrusage(RUSAGE_SELF, &p_end);
 						if (getTime2 == -1){
-							fprintf(stderr, "Getting rusage for wait failed. \n", optarg);
+							fprintf(stderr, "Getting rusage for wait failed. \n");
 							numErrors++;
 							continue;
 						}
@@ -364,10 +364,10 @@ int main(int argc, char* argv[]){
 						s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 
 						t_sec = u_sec + s_sec;
-						t_usec = u_microsec + s_microsec
+						t_usec = u_microsec + s_microsec;
 
-						//child
-						int getTime2 = getrusage(RUSAGE_CHILDREN, c_end);
+			/*			//child
+						int getTime2 = getrusage(RUSAGE_CHILDREN, &c_end);
 						if (getTime2 == -1){
 							fprintf(stderr, "Getting rusage for all children failed. \n", optarg);
 							numErrors++;
@@ -394,14 +394,12 @@ int main(int argc, char* argv[]){
 						c_s_sec = c_end.ru_stime.tv_sec;
 
 						t_c_sec = c_u_sec + c_s_sec;
-						t_c_usec = c_u_microsec + c_s_microsec;
+						t_c_usec = c_u_microsec + c_s_microsec;*/
 
 						t_sec = u_sec + s_sec;
-						t_usec = u_microsec + s_microsec
-						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", (int) t_sec, (int) t_usec, (int) u_sec, (int) u_microsec, (int) s_sec, (int) s_microsec);
-						printf("All children completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
-							%d seconds and %d microseconds were spent in kernel mode.", (int) t_c_sec, (int) t_c_usec, (int) c_u_sec, (int) c_u_microsec, (int) c_s_sec,(int)  c_s_microsec);
+						t_usec = u_microsec + s_microsec;
+						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) t_sec, (int) t_usec, (int) u_sec, (int) u_microsec, (int) s_sec, (int) s_microsec);
+						printf("All children completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) t_c_sec, (int) t_c_usec, (int) c_u_sec, (int) c_u_microsec, (int) c_s_sec,(int)  c_s_microsec);
 
 					}
 					
