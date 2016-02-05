@@ -53,6 +53,7 @@ struct command{
 	struct rusage p_start, c_start, p_end, c_end;
 	time_t t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec;
 	time_t t_c_sec, t_c_usec, c_u_sec, c_u_microsec, c_s_sec, c_s_microsec;
+	int numErrors = 0;
 
 void catch_sig(int sigNum){
 	fprintf(stderr, "Signal %d was caught. \n", sigNum);
@@ -64,7 +65,6 @@ int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time
 	if (getTime2 == -1){
 		fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
 		numErrors++;
-		continue;
 	}
 	//now calculate total time
 	//calculate user time, start with microsec
@@ -90,7 +90,7 @@ int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time
 
 }
 
-int numErrors = 0;
+
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]){
 			case RDWR:
 				{
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-				/*	if(profile_flag) {//get time before it processes
+					if(profile_flag) {//get time before it processes
 						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for opening file %s in read and write mode failed. \n", optarg);
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]){
 							fidList[numFid++] = -1;
 							continue;
 						}
-					}*/
+					}
 					fid = open(optarg, O_RDWR | oflags, 0777);
 					if (fid == -1){ //there was an error opening a file
 						fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
@@ -279,14 +279,6 @@ int main(int argc, char* argv[]){
 					//DO FOR CHILDREN
 					
 					for (int i = 0; i < numCmd; i++){
-						if(profile_flag) {//get time before it processes
-							int getCTime1 = getrusage(RUSAGE_SELF, c_start);
-							if (getCTime1 == -1){
-								fprintf(stderr, "Getting rusage for child failed. \n");
-								numErrors++;
-								continue;
-							}
-						}
 						//printf("waiting on %d, %s\n", i, cmdList[i].name);
 						waitpid(cmdList[i].pid, &exitStatus, 0);
 						//printf("Finished waiting on %s\n", cmdList[i].name);
@@ -301,42 +293,11 @@ int main(int argc, char* argv[]){
 							printf("%s\n", cmdList[i].cmdArgs);
 						}
 
-						if(profile_flag){//get time after it processes and calculate total time
-							int getTime2 = getrusage(RUSAGE_SELF, p_end);
-							if (getTime2 == -1){
-								fprintf(stderr, "Getting rusage for wait failed. \n", optarg);
-								numErrors++;
-								continue;
-							}
-							//now calculate total time
-							//calculate user time, start with microsec
-							c_u_microsec = c_end.ru_utime.tv_usec-c_start.ru_utime.tv_usec;
-							//check to see if negative, if so then adjust for time
-							if (u_microsec < 0){
-								p_end.ru_time.tv_sec--;
-								u_microsec += 1000000;
-							}
-							c_u_sec = c_end.ru_utime.tv_sec - c_start.ru_utime.tv_sec;		
-
-							//calculate kernel time, start with microsec
-							c_s_microsec = c_end.ru_stime.tv_usec-c_start.ru_stime.tv_usec;
-							//check to see if negative, if so then adjust for time
-							if (s_microsec < 0){
-								p_end.ru_time.tv_sec--;
-								s_microsec += 1000000;
-							}
-							c_s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-
-							t_c_sec = u_sec + s_sec;
-							t_c_usec = u_microsec + s_microsec
-
-						}
-
-
 					}
 
 					//DOFORPARENT
 					if(profile_flag){//get time after it processes and calculate total time
+						//for parent
 						int getTime2 = getrusage(RUSAGE_SELF, p_end);
 						if (getTime2 == -1){
 							fprintf(stderr, "Getting rusage for wait failed. \n", optarg);
@@ -345,25 +306,57 @@ int main(int argc, char* argv[]){
 						}
 						//now calculate total time
 						//calculate user time, start with microsec
-						time_t u_microsec = p_end.ru_utime.tv_usec-p_start.ru_utime.tv_usec;
+
+						u_microsec = p_end.ru_utime.tv_usec - p_start.ru_utime.tv_usec;
 						//check to see if negative, if so then adjust for time
 						if (u_microsec < 0){
 							p_end.ru_time.tv_sec--;
 							u_microsec += 1000000;
 						}
-						time_t u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
+						u_sec = p_end.ru_utime.tv_sec - p_start.ru_utime.tv_sec;	
 
 						//calculate kernel time, start with microsec
-						time_t s_microsec = p_end.ru_stime.tv_usec-p_start.ru_stime.tv_usec;
+						s_microsec = p_end.ru_stime.tv_usec - p_start.ru_stime.tv_usec;
 						//check to see if negative, if so then adjust for time
 						if (s_microsec < 0){
 							p_end.ru_time.tv_sec--;
 							s_microsec += 1000000;
 						}
-						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
+						s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
+						t_sec = u_sec + s_sec;
+						t_usec = u_microsec + s_microsec
+
+						//child
+						int getTime2 = getrusage(RUSAGE_CHILDREN, c_end);
+						if (getTime2 == -1){
+							fprintf(stderr, "Getting rusage for all children failed. \n", optarg);
+							numErrors++;
+							continue;
+						}
+						//now calculate total time
+						//calculate user time, start with microsec
+
+						c_u_microsec = c_end.ru_utime.tv_usec;
+						//check to see if negative, if so then adjust for time
+						if (c_u_microsec < 0){
+							c_end.ru_time.tv_sec--;
+							c_u_microsec += 1000000;
+						}
+						c_u_sec = c_end.ru_utime.tv_sec;	
+
+						//calculate kernel time, start with microsec
+						c_s_microsec = c_end.ru_stime.tv_usec;
+						//check to see if negative, if so then adjust for time
+						if (c_s_microsec < 0){
+							c_end.ru_time.tv_sec--;
+							c_s_microsec += 1000000;
+						}
+						c_s_sec = c_end.ru_stime.tv_sec;
+
+						t_c_sec = c_u_sec + c_s_sec;
+						t_c_usec = c_u_microsec + c_s_microsec;
+
 						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
 							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
 						printf("All children completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
