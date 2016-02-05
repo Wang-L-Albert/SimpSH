@@ -68,9 +68,10 @@ void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, t
 	}
 	//now calculate total time
 	//calculate user time, start with microsec
+	printf("u_microsecond issss: %d \n", (int)usage->ru_utime.tv_usec );
 	*u_microSecond = usage->ru_utime.tv_usec - p_start.ru_utime.tv_usec;
 	//check to see if negative, if so then adjust for time
-	if (u_microSecond < 0){
+	if (*u_microSecond < 0){
 		usage->ru_utime.tv_sec--;
 		*u_microSecond += 1000000;
 	}
@@ -78,20 +79,20 @@ void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, t
 		//calculate kernel time, start with microsec
 	*s_microSecond = usage->ru_stime.tv_usec - p_start.ru_stime.tv_usec;
 	//check to see if negative, if so then adjust for time
-	if (s_microSecond < 0){
+	if (*s_microSecond < 0){
 		usage->ru_stime.tv_sec--;
 		*s_microSecond += 1000000;
 	}
 	*s_second = usage->ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-	*totalSec = u_second + s_second;
-	*totalMicrosec = u_microSecond + s_microSecond;
-	printf("\"--rdonly\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n %d seconds and %d microseconds were spent in kernel mode.", (int) totalSec, (int) totalMicrosec, (int) u_second, (int) u_microSecond, (int) s_second, (int) s_microSecond);
+	*totalSec = *u_second + *s_second;
+	*totalMicrosec = *u_microSecond + *s_microSecond;
+	printf("\"--rdonly\" completed in %lu seconds and %lu microseconds. \n %lu seconds and %lu microseconds were spent in user mode. \n %lu seconds and %lu microseconds were spent in kernel mode. \n", (long) *totalSec, (long) *totalMicrosec, (long) *u_second, (long) *u_microSecond, (long) *s_second, (long) *s_microSecond);
 
 }
 
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
-	//there will never be more than argc child processes, so this is more than enough.
+	//there will never be more than argc chilu processes, so this is more than enough.
 	struct command* cmdList =  malloc(argc*sizeof(struct command));
 	int* fidList = (int*) malloc(argc*sizeof(int));
 	int numCmd = 0;
@@ -152,6 +153,9 @@ int main(int argc, char* argv[]){
 			case RDONLY://rdonly
 			{
 				if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
+
+				//we open the file as pointed to by optarg in read only mode
+				fid = open(optarg, O_RDONLY | oflags, 0777);
 				if(profile_flag) {//get time before it processes
 					int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 					if (getTime1 == -1){
@@ -160,9 +164,8 @@ int main(int argc, char* argv[]){
 						fidList[numFid++] = -1;
 						continue;
 					}
+					printf("TIMEEE:  %d \n",(int)p_start.ru_utime.tv_usec);
 				}
-				//we open the file as pointed to by optarg in read only mode
-				fid = open(optarg, O_RDONLY | oflags, 0777);
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in read only mode failed. \n", optarg);
 					numErrors++;
@@ -174,6 +177,7 @@ int main(int argc, char* argv[]){
 				//printf("%s\n", ("Opened in read only."));
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
+
 				if (profile_flag){
 					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
 				}
@@ -205,13 +209,12 @@ int main(int argc, char* argv[]){
 				if (profile_flag){
 					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
 				}
-		
 			}
 				break;
 			case RDWR:
 				{
 					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-				/*	if(profile_flag) {//get time before it processes
+					if(profile_flag) {//get time before it processes
 						int getTime1 = getrusage(RUSAGE_SELF, &p_start);
 						if (getTime1 == -1){
 							fprintf(stderr, "Getting rusage for opening file %s in read and write mode failed. \n", optarg);
@@ -219,7 +222,7 @@ int main(int argc, char* argv[]){
 							fidList[numFid++] = -1;
 							continue;
 						}
-					}*/
+					}
 					fid = open(optarg, O_RDWR | oflags, 0777);
 					if (fid == -1){ //there was an error opening a file
 						fprintf(stderr, "Opening file %s in read and write only mode failed. \n", optarg);
@@ -228,6 +231,7 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					fidList[numFid++] = fid;
+
 					if (profile_flag){
 						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
 					}

@@ -82,7 +82,10 @@
 ################
 #### Lab 1C ####
 ################
-	head -c 50000000 </dev/urandom > rand.txt
+
+	head -c 10000000 </dev/urandom > rand.txt
+	#./simpsh --profile --rdonly sortbert.txt --pipe --pipe --wronly finbert.txt --wronly errbert.txt --command 0 2 6 tr a-z A-Z --command 1 4 6 tr A a --command 3 5 6 tr Z z
 	./simpsh --rdonly rand.txt --profile
+	echo "\nDAFQU\n"
 	./simpsh --profile --rdonly rand.txt 
-	./simpsh --profile --rdonly sortbert.txt --pipe --pipe --wronly finbert.txt --wronly errbert.txt --command 0 2 6 tr a-z A-Z --command 1 4 6 tr A a --command 3 5 6 tr Z z
+	#./simpsh --profile --rdonly sortbert.txt --pipe --pipe --wronly finbert.txt --wronly errbert.txt --command 0 2 6 tr a-z A-Z --command 1 4 6 tr A a --command 3 5 6 tr Z z
