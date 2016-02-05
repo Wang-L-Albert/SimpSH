@@ -50,6 +50,7 @@ struct command{
 	char cmdArgs[200];
 };
 
+	int numErrors = 0;
 	struct rusage p_start, c_start, p_end, c_end;
 	time_t t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec;
 	time_t t_c_sec, t_c_usec, c_u_sec, c_u_microsec, c_s_sec, c_s_microsec;
@@ -90,7 +91,6 @@ int profileEnd(struct rusage* usage, time_t u_second, time_t u_microSecond, time
 
 }
 
-int numErrors = 0;
 int main(int argc, char* argv[]){
 	//set up dynamic arrays
 	//there will never be more than argc child processes, so this is more than enough.
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]){
 						if(profile_flag){//get time after it processes and calculate total time
 							int getTime2 = getrusage(RUSAGE_SELF, p_end);
 							if (getTime2 == -1){
-								fprintf(stderr, "Getting rusage for wait failed. \n", optarg);
+								fprintf(stderr, "Getting rusage for child failed. \n", optarg);
 								numErrors++;
 								continue;
 							}
@@ -313,7 +313,7 @@ int main(int argc, char* argv[]){
 							c_u_microsec = c_end.ru_utime.tv_usec-c_start.ru_utime.tv_usec;
 							//check to see if negative, if so then adjust for time
 							if (u_microsec < 0){
-								p_end.ru_time.tv_sec--;
+								p_end.ru_utime.tv_sec--;
 								u_microsec += 1000000;
 							}
 							c_u_sec = c_end.ru_utime.tv_sec - c_start.ru_utime.tv_sec;		
@@ -322,7 +322,7 @@ int main(int argc, char* argv[]){
 							c_s_microsec = c_end.ru_stime.tv_usec-c_start.ru_stime.tv_usec;
 							//check to see if negative, if so then adjust for time
 							if (s_microsec < 0){
-								p_end.ru_time.tv_sec--;
+								p_end.ru_stime.tv_sec--;
 								s_microsec += 1000000;
 							}
 							c_s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
@@ -360,9 +360,9 @@ int main(int argc, char* argv[]){
 							p_end.ru_stime.tv_sec--;
 							s_microsec += 1000000;
 						}
-<<<<<<< HEAD
+
 						time_t s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
-=======
+
 						s_sec = p_end.ru_stime.tv_sec - p_start.ru_stime.tv_sec;
 
 						t_sec = u_sec + s_sec;
@@ -397,10 +397,9 @@ int main(int argc, char* argv[]){
 
 						t_c_sec = c_u_sec + c_s_sec;
 						t_c_usec = c_u_microsec + c_s_microsec;
->>>>>>> parent of e9ad69a... Revert "more bugfixes, again"
 
-						time_t t_sec = u_sec + s_sec;
-						time_t t_usec = u_microsec + s_microsec
+						t_sec = u_sec + s_sec;
+						t_usec = u_microsec + s_microsec
 						printf("\"--pipe\" completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
 							%d seconds and %d microseconds were spent in kernel mode.", t_sec, t_usec, u_sec, u_microsec, s_sec, s_microsec);
 						printf("All children completed in %d seconds and %d microseconds. \n %d seconds and %d microseconds were spent in user mode. \n 
