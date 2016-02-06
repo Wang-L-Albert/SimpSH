@@ -1,0 +1,29 @@
+Albert Wang 5044457700
+Lauren Yeung 104456482
+
+Bash1:
+time sort rand.txt > /dev/null
+
+Bash2:
+time cat < rand.txt | cat - rand.txt | cat - rand.txt rand.txt > /dev/null
+
+Bash3:
+time cat < rand.txt | sort - | tr ' ' 'a' | tr '[0-9]' '[a-j]' > /dev/null
+
+Exec1:
+
+
+Exec2:
+/usr/local/cs/execline-2.1.4.5/bin/pipeline { cat rand.txt }
+/usr/local/cs/execline-2.1.4.5/bin/pipeline { cat rand.txt rand.txt }
+/usr/local/cs/execline-2.1.4.5/bin/redirfd -w 1 o  -
+
+Exec3:
+/usr/local/cs/execline-2.1.4.5/bin/pipeline { cat rand.txt }
+/usr/local/cs/execline-2.1.4.5/bin/pipeline { sort }
+usr/local/cs/execline-2.1.4.5/bin/pipeline { tr " " "a" } 
+usr/local/cs/execline-2.1.4.5/bin/redirfd { tr "[0-9]" "[a-j]" } 
+
+Exec3:
+
+
