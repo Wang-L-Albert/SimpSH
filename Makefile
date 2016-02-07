@@ -26,7 +26,7 @@ check: default
 	
 dist: check
 	mkdir lab1-laurenyeung
-	mv *.sh *.c *simpsh *Makefile *README lab1-laurenyeung
+	mv *.sh *.c *.pdf *simpsh *Makefile *README lab1-laurenyeung
 	tar -cvf lab1-laurenyeung.tar.gz lab1-laurenyeung
 
 

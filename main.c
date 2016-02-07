@@ -178,7 +178,7 @@ int main(int argc, char* argv[]){
 						fidList[numFid++] = -1;
 						continue;
 					}
-					printf("TIMEEE:  %d \n",(int)p_start.ru_utime.tv_usec);
+					//printf("TIMEEE:  %d \n",(int)p_start.ru_utime.tv_usec);
 				}
 				if (fid == -1){ //there was an error opening a file
 					fprintf(stderr, "Opening file %s in read only mode failed. \n", optarg);
