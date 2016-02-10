@@ -41,6 +41,7 @@
 #define DEFAULT 'v'
 #define PAUSE 'w'
 #define PROFILE 'x'
+#define PARALLEL 'y'
 
 struct command{
 	int pid;
@@ -113,9 +114,12 @@ int main(int argc, char* argv[]){
 	int numFid = 0;
 	int fid = 0;
 	int oflags = 0;
+	int maxChildren = 0;
+	int numChildren = 0;
 
 	static int verbose_flag = 0;
 	static int profile_flag = 0;
+	static int parallel_flag = 0;
 	struct option optionlist[] = {
 		//*name, hasarg, *flag, val
 		{"rdonly",  hasarg, noflag, RDONLY},
@@ -143,6 +147,7 @@ int main(int argc, char* argv[]){
 		{"default", hasarg, noflag, DEFAULT},
 		{"pause", noarg, noflag, PAUSE},
 		{"profile", noarg, &profile_flag, 1},
+		{"parallel", hasarg, &parallel_flag, PARALLEL},
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -378,7 +383,9 @@ int main(int argc, char* argv[]){
 
 
 					}
-
+					if (parallel_flag){
+						numChildren = 0;
+					}
 					//DOFORPARENT
 					if(profile_flag){//get time after it processes and calculate total time
 						int getTime2 = getrusage(RUSAGE_SELF, &p_end);
@@ -459,6 +466,18 @@ int main(int argc, char* argv[]){
 					int b = *a;
 				}
 				break;
+			case PARALLEL:
+				{
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
+					int checkValidInt = atoi(optarg); //get our argument for PARALLEL
+					if (!isdigit(checkValidInt)){ //if argument is not an int, we throw an error
+						fprintf(stderr, "Argument for --parallel was not an integer.");
+						numErrors++;
+						continue;
+					}
+					maxChildren = checkValidInt;
+					break;
+				}
 			case CATCH:
 				{
 					if (optarg == NULL){
@@ -662,6 +681,23 @@ int main(int argc, char* argv[]){
 					break;
 				}
 				//check for valid fd's
+
+				//check if allowed to make a new child, stall if can't
+				if(parallel_flag){
+					if (numChildren >= maxChildren){
+					//if too many children already, wait for one to finish before starting another
+						printf("Max number of subprocesses (%d) already running. Please wait.", numChildren);
+						int waitOnChild;
+						wait(&waitOnChild);
+						if (waitOnChild == -1){
+							fprintf(stderr, "Waiting on a child process to finish failed. System cannot create a new subprocesses. Program shutting down.");
+							numErrors++;
+							exit(numErrors);
+						}
+						numChildren--;
+					}
+				}
+				
 				pid_t childPid = fork();
 				if (childPid == 0){ //if it is a child
 					//now three times from optind-1 to get the I/O re-routes
@@ -704,6 +740,9 @@ int main(int argc, char* argv[]){
 						exit(1);
 					}
 				} 
+				if(parallel_flag){
+					numChildren++;
+				}
 				cmdList[numCmd].pid = childPid;
 				cmdList[numCmd].cmdPos = optind+2;
 				cmdList[numCmd].cmdEnd = optEnd;
