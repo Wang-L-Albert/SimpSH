@@ -90,3 +90,11 @@
 	./simpsh --profile --rdonly rand.txt --pipe --pipe --creat --trunc --wronly finbert.txt --creat --append --wronly errbert.txt --command 0 2 6 cat rand.txt --command 3 5 6 cat - rand.txt --command 1 4 6 cat - rand.txt rand.txt --wait
 	./simpsh --profile --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
 
+
+#######################
+#### Problem Design ###
+#######################
+
+	./simpsh --profile --rdonly rand.txt --wronly bye.txt --wronly errbert.txt --command 0 1 2 sort --wait
+	./simpsh --profile --rdonly rand.txt --pipe --pipe --creat --trunc --wronly finbert.txt --creat --append --wronly errbert.txt --command 0 2 6 cat rand.txt --command 3 5 6 cat - rand.txt --command 1 4 6 cat - rand.txt rand.txt --wait
+	./simpsh --profile --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
