@@ -148,7 +148,7 @@ int main(int argc, char* argv[]){
 		{"default", hasarg, noflag, DEFAULT},
 		{"pause", noarg, noflag, PAUSE},
 		{"profile", noarg, &profile_flag, 1},
-		{"parallel", hasarg, &parallel_flag, PARALLEL},
+		{"parallel", hasarg, noflag, PARALLEL},
 		{0 , 0, 0, 0} 
 		//last element indicated by 0's
 	}; //********expand this to be variable later
@@ -469,20 +469,24 @@ int main(int argc, char* argv[]){
 				break;
 			case PARALLEL:
 				{
-					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
-					int checkValidInt = atoi(optarg); //get our argument for PARALLEL
-					if (!isdigit(checkValidInt)){ //if argument is not an int, we throw an error
-						fprintf(stderr, "Argument for --parallel was not an integer.");
-						numErrors++;
-						continue;
-					}
-					if(checkValidInt<=0){ //must have positive number of subprocesses
-						fprintf(stderr, "Argument for --parallel must be a positive integer.");
-						numErrors++;
-						continue;
-					}
 
+				//	printf("Entering parallel     : \n");
+					if(verbose_flag) printf("--%s %s\n", optionlist[option_ind].name, optarg);
+
+			//		printf("optarg     : %s\n", optarg);
+					int checkValidInt = atoi(optarg); //get our argument for PARALLEL
+
+			//		printf("Entering checkValidInt is     : %d\n", checkValidInt);
+					if (!isdigit(*optarg) || checkValidInt==0){ //if argument is not an int, we throw an error
+						fprintf(stderr, "Argument for --parallel was not a positive integer.\n");
+						numErrors++;
+						continue;
+					}
+					parallel_flag = 1;
+
+			//		printf("checkValidInt is  %d\n", checkValidInt);
 					maxChildren = checkValidInt;
+			//		printf("MAx children is  %d\n", maxChildren);
 					break;
 				}
 			case CATCH:
@@ -693,11 +697,11 @@ int main(int argc, char* argv[]){
 				if(parallel_flag){
 					if (numChildren >= maxChildren){
 					//if too many children already, wait for one to finish before starting another
-						printf("Max number of subprocesses (%d) already running. Please wait.", numChildren);
-						int waitOnChild;
-						waitpid(-1, &waitOnChild,0);
+						printf("Max number of subprocesses (%d) already running. Please wait.\n", numChildren);
+						int waitOnChild = 0;
+						//waitpid(-1, &waitOnChild,0);
 						if (waitOnChild == -1){
-							fprintf(stderr, "Waiting on a child process to finish failed. System cannot create a new subprocesses. Program shutting down.");
+							fprintf(stderr, "Waiting on a child process to finish failed. System cannot create a new subprocesses. Program shutting down.\n");
 							numErrors++;
 							exit(numErrors);
 						}
@@ -749,6 +753,7 @@ int main(int argc, char* argv[]){
 				} 
 				if(parallel_flag){
 					numChildren++;
+					printf("Adding child\n");
 				}
 				cmdList[numCmd].pid = childPid;
 				cmdList[numCmd].cmdPos = optind+2;

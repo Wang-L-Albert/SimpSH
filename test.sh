@@ -96,11 +96,11 @@
 #######################
 
 	
-	./simpsh --parallel 2 --rdonly rand.txt --pipe --pipe --creat --trunc --wronly finbert.txt --creat --append --wronly errbert.txt --command 0 2 6 cat rand.txt --command 3 5 6 cat - rand.txt --command 1 4 6 cat - rand.txt rand.txt --wait
-#	./simpsh --parallel 3 --profile --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
+#	./simpsh  --parallel 2 --rdonly hi.txt --pipe --pipe --creat --wronly finbert.txt --creat --append --wronly errbert.txt --command 0 2 6 cat hi.txt --command 3 5 6 cat - hi.txt --command 1 4 6 cat - hi.txt hi.txt
+#	./simpsh --parallel 3--rdonly hi.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat hi.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
 
-#	./simpsh --parallel a --profile --rdonly rand.txt --wronly bye.txt --wronly errbert.txt --command 0 1 2 sort --wait
-#	./simpsh --parallel 10 --profile --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
-#	./simpsh --parallel 0 --profile --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --wait
-#	./simpsh --parallel -3 --profile --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
+#	./simpsh --parallel a --rdonly rand.txt --wronly bye.txt --wronly errbert.txt --command 0 1 2 sort --wait
+#	./simpsh --parallel 10 --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
+#	./simpsh --parallel 0 --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --wait
+#	./simpsh --parallel -3 --rdonly rand.txt --pipe --pipe --pipe --rdonly finbert.txt --rdonly errbert.txt --command 0 2 8 cat rand.txt --command 1 4 8 sort --command 3 6 8 tr ' ' 'a' --command 4 7 8 tr '[0-9]' '[a-j]' --wait
 
