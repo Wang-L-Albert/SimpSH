@@ -14,6 +14,7 @@ clean:
 	rm finbert.txt
 #	rm hellbert.txt
 	rm rand.txt
+	rm rand2.txt
 
 check: default
 	echo "hi albert" >> hi.txt

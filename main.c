@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #define noarg 0
 #define hasarg 1
@@ -63,7 +64,7 @@ void catch_sig(int sigNum){
 	exit(sigNum);
 }
 
-void profileEnd(struct rusage* usage, time_t* u_second, time_t* u_microSecond, time_t* s_second, time_t* s_microSecond, time_t* totalSec, time_t* totalMicrosec ){
+void profileEnd(struct rusage* usage){
 	int getTime2 = getrusage(RUSAGE_SELF, usage);
 	if (getTime2 == -1){
 		fprintf(stderr, "Getting rusage for opening file %s in read only mode failed. \n", optarg);
@@ -198,7 +199,7 @@ int main(int argc, char* argv[]){
 				//printf("%d\n", (fidList[numFid-1]));
 
 				if (profile_flag){
-					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					profileEnd(&p_end);
 				}
 			}
 				break;
@@ -226,7 +227,7 @@ int main(int argc, char* argv[]){
 				//printf("optarg: %s\n", optarg);
 				//printf("%d\n", (fidList[numFid-1]));
 				if (profile_flag){
-					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					profileEnd(&p_end);
 				}
 			}
 				break;
@@ -252,7 +253,7 @@ int main(int argc, char* argv[]){
 					fidList[numFid++] = fid;
 
 					if (profile_flag){
-						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+						profileEnd(&p_end);
 					}
 				}
 				
@@ -280,7 +281,7 @@ int main(int argc, char* argv[]){
 					free (pipeFid); 	
 
 					if (profile_flag){
-						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+						profileEnd(&p_end);
 					}
 				}
 				break;
@@ -455,7 +456,7 @@ int main(int argc, char* argv[]){
 						continue;
 					}
 					if (profile_flag){
-						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+						profileEnd(&p_end);
 					}
 				}
 				break;	
@@ -475,6 +476,12 @@ int main(int argc, char* argv[]){
 						numErrors++;
 						continue;
 					}
+					if(checkValidInt<=0){ //must have positive number of subprocesses
+						fprintf(stderr, "Argument for --parallel must be a positive integer.");
+						numErrors++;
+						continue;
+					}
+
 					maxChildren = checkValidInt;
 					break;
 				}
@@ -497,7 +504,7 @@ int main(int argc, char* argv[]){
 					int signalNum = atoi(optarg);
 					signal(signalNum, catch_sig);
 					if (profile_flag){
-						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+						profileEnd(&p_end);
 					}
 				}
 				break;
@@ -520,7 +527,7 @@ int main(int argc, char* argv[]){
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_IGN);
 					if (profile_flag){
-						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+						profileEnd(&p_end);
 					}
 					
 				}
@@ -544,7 +551,7 @@ int main(int argc, char* argv[]){
 					int signalNum = atoi(optarg);
 					signal(signalNum, SIG_DFL);
 					if (profile_flag){
-						profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+						profileEnd(&p_end);
 					}
 				}
 				break;
@@ -688,7 +695,7 @@ int main(int argc, char* argv[]){
 					//if too many children already, wait for one to finish before starting another
 						printf("Max number of subprocesses (%d) already running. Please wait.", numChildren);
 						int waitOnChild;
-						wait(&waitOnChild);
+						waitpid(-1, &waitOnChild,0);
 						if (waitOnChild == -1){
 							fprintf(stderr, "Waiting on a child process to finish failed. System cannot create a new subprocesses. Program shutting down.");
 							numErrors++;
@@ -752,7 +759,7 @@ int main(int argc, char* argv[]){
 				}
 				cmdList[numCmd++].name = argv[optind+2];
 				if (profile_flag){
-					profileEnd(&p_end, &u_sec, &u_microsec, &s_sec, &s_microsec, &t_sec, &t_usec);
+					profileEnd(&p_end);
 				}
 			}	break;
 			
